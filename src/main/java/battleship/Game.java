@@ -171,12 +171,13 @@ public class Game implements IGame
 	private Integer countHits;
 	private Integer countSinks;
 	private int moveNumber;
-	private long turnStartTime = System.currentTimeMillis();
+	private long turnEndTime = 0;
 
 	//------------------------------------------------------------------
 	public Game(IFleet myFleet)
 	{
 		this.gameTimer.start();
+
 		this.moveNumber = 1;
 
 		this.alienMoves = new ArrayList<IMove>();
@@ -290,8 +291,8 @@ public class Game implements IGame
 
 		assert in != null;
 
-		long timeGone = System.currentTimeMillis() - turnStartTime;
-		turnStartTime = System.currentTimeMillis();
+		long timeGone = gameTimer.getTime()-turnEndTime;
+		turnEndTime = gameTimer.getTime();
 		System.out.println("⏱️ [TEMPO DE JOGADA] Demorou " + timeGone + " ms (" + (timeGone / 1000.0) + " segundos) a efetuar esta jogada.");
 
 
