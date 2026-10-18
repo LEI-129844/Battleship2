@@ -33,6 +33,7 @@ public class Tasks {
 	private static final String MAPA = "mapa";
 	private static final String STATUS = "estado";
 	private static final String SIMULA = "simula";
+	private static final String PDF = "pdf";
 
 	/**
 	 * This task also tests the fighting element of a round of three shots
@@ -86,6 +87,7 @@ public class Tasks {
 
 						if (game.getRemainingShips() == 0) {
 							game.over();
+							exportPdf(game);
 							System.exit(0);
 						}
 					}
@@ -108,6 +110,7 @@ public class Tasks {
 
 						if (game.getRemainingShips() == 0) {
 							game.over();
+							exportPdf(game);
 							System.exit(0);
 						}
 					}
@@ -116,9 +119,15 @@ public class Tasks {
 					if (game != null)
 						game.printMyBoard(true, true);
 					break;
-                case AJUDA:
-                    menuHelp();
-                    break;
+				case PDF:
+					if (game != null)
+						exportPdf(game);
+					else
+						System.out.println("Ainda não há jogo! Usa primeiro '" + GERAFROTA + "' ou '" + LEFROTA + "'.");
+					break;
+				case AJUDA:
+					menuHelp();
+					break;
 				default:
 					System.out.println("Que comando é esse??? Repete ...");
 			}
@@ -147,10 +156,24 @@ public class Tasks {
 		System.out.println("- " + MAPA + ": Exibe o mapa da frota.");
 		System.out.println("- " + RAJADA + ": Realiza uma rajada de disparos.");
 		System.out.println("- " + SIMULA + ": Simula um jogo completo.");
+		System.out.println("- " + PDF + ": Exporta o histórico de jogadas e o tabuleiro para PDF (pasta reports/).");
 		System.out.println("- " + TIROS + ": Lista os tiros válidos realizados (* = tiro em navio, o = tiro na água)");
 		System.out.println("- " + DESISTIR + ": Encerra o jogo.");
 		System.out.println("===============================================================");
 	}
+	/**
+	 * Exporta o histórico de jogadas do jogo para um ficheiro PDF (ver {@link PdfExporter}).
+	 *
+	 * @param game o jogo a exportar
+	 */
+	public static void exportPdf(IGame game) {
+		try {
+			System.out.println("PDF das jogadas gerado em: " + PdfExporter.export(game).toAbsolutePath());
+		} catch (Exception e) {
+			LOGGER.error("Não foi possível gerar o PDF das jogadas: {}", e.getMessage());
+		}
+	}
+
 	/**
 	 * This operation allows the build up of a fleet, given user data
 	 *
