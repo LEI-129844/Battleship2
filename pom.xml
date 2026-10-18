@@ -78,6 +78,12 @@
 
 	<dependencies>
 		<!-- Spring Boot REST server (includes Jackson, embedded Tomcat) -->
+        <!-- Biblioteca Google Gson para o Scoreboard JSON (US #5) -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.11.0</version>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
