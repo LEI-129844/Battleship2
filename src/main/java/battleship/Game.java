@@ -9,6 +9,8 @@ import java.util.*;
 
 public class Game implements IGame
 {
+
+	private final StopWatch gameTimer = new StopWatch();
 	/**
 	 * Prints the game board by representing the positions of ships, adjacent tiles,
 	 * shots, and other game elements onto the console. The method also optionally
@@ -169,10 +171,12 @@ public class Game implements IGame
 	private Integer countHits;
 	private Integer countSinks;
 	private int moveNumber;
+	private long turnStartTime = System.currentTimeMillis();
 
 	//------------------------------------------------------------------
 	public Game(IFleet myFleet)
 	{
+		this.gameTimer.start();
 		this.moveNumber = 1;
 
 		this.alienMoves = new ArrayList<IMove>();
@@ -286,6 +290,11 @@ public class Game implements IGame
 
 		assert in != null;
 
+		long timeGone = System.currentTimeMillis() - turnStartTime;
+		turnStartTime = System.currentTimeMillis();
+		System.out.println("⏱️ [TEMPO DE JOGADA] Demorou " + timeGone + " ms (" + (timeGone / 1000.0) + " segundos) a efetuar esta jogada.");
+
+
 		String input = in.nextLine().trim();
 
 		// Criar lista para armazenar os tiros
@@ -317,6 +326,8 @@ public class Game implements IGame
 
 		this.fireShots(shots);
 
+
+
 		return Game.jsonShots(shots);
 	}
 
@@ -336,7 +347,6 @@ public class Game implements IGame
 	{
 		assert shots != null;
 
-		StopWatch stopWatch = StopWatch.createStarted();
 
 		List<ShotResult> shotResults = new ArrayList<ShotResult>();
 		if (shots.size() != NUMBER_SHOTS) {
@@ -357,8 +367,6 @@ public class Game implements IGame
 
 		alienMoves.add(move);
 
-		stopWatch.stop();
-		System.out.println("[TEMPO] Jogada " + moveNumber + " executada em: " + stopWatch.getTime() + " ms (" + stopWatch.formatTime() + ")");
 
 		moveNumber++;
 	}
