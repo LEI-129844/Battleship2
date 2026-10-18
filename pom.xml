@@ -89,6 +89,12 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 			<version>3.2.4</version>
 		</dependency>
+		<!-- SQLite for BD -->
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.53.4.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>

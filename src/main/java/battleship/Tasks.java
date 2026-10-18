@@ -1,5 +1,6 @@
 package battleship;
 
+import java.util.List;
 import java.util.Scanner;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,9 +38,13 @@ public class Tasks {
 	 * This task also tests the fighting element of a round of three shots
 	 */
 	public static void menu() {
+		menu(new MoveDatabase());
+	}
 
+	static void menu(MoveDatabase moveDatabase) {
 		IFleet myFleet = null;
 		IGame game = null;
+		Long currentGameId = null;
 		menuHelp();
 
 		System.out.print("> ");
@@ -51,11 +56,15 @@ public class Tasks {
 				case GERAFROTA:
 					myFleet = Fleet.createRandom();
 					game = new Game(myFleet);
+					currentGameId = moveDatabase.createGame();
+					System.out.println("Partida registada na base de dados. ID: " + currentGameId);
 					game.printMyBoard(false, true);
 					break;
 				case LEFROTA:
 					myFleet = buildFleet(in);
 					game = new Game(myFleet);
+					currentGameId = moveDatabase.createGame();
+					System.out.println("Partida registada na base de dados. ID: " + currentGameId);
 					game.printMyBoard(false, true);
 					break;
 				case STATUS:
@@ -69,6 +78,9 @@ public class Tasks {
 				case RAJADA:
 					if (game != null) {
 						game.readEnemyFire(in);
+						if (currentGameId != null) {
+							persistLatestMove(moveDatabase, currentGameId, game);
+						}
 						myFleet.printStatus();
 						game.printMyBoard(true, false);
 
@@ -82,6 +94,9 @@ public class Tasks {
 					if (game != null) {
 						while (game.getRemainingShips() > 0){
 							game.randomEnemyFire();
+							if (currentGameId != null) {
+								persistLatestMove(moveDatabase, currentGameId, game);
+							}
 							myFleet.printStatus();
 							game.printMyBoard(true, false);
 							try {
@@ -116,6 +131,13 @@ public class Tasks {
 	/**
 	 * This function provides help information about the menu commands.
 	 */
+	static void persistLatestMove(MoveDatabase database, long gameId, IGame game) {
+		List<IMove> moves = game.getAlienMoves();
+		if (!moves.isEmpty()) {
+			database.saveMove(gameId, moves.get(moves.size() - 1));
+		}
+	}
+
 	public static void menuHelp() {
 		System.out.println("======================= AJUDA DO MENU =========================");
 		System.out.println("Digite um dos comandos abaixo para interagir com o jogo:");
