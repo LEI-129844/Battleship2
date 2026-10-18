@@ -1,0 +1,5 @@
+# Base de dados SQLite local, não deve ser enviada para o repositório
+/battleship.db*
+
+# Artefactos gerados pelo Maven e pelos testes
+/target/
