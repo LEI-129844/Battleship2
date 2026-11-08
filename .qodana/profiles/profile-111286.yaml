@@ -6,3 +6,4 @@ inspections:
     options:
       ignoreInHashCode: true
       ignoreInTestCode: true
+
