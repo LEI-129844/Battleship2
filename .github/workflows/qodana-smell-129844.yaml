@@ -1,4 +1,4 @@
-# 129844 - Nome do Aluno
+# 129844 - Henrique Fernandes
 name: Qodana smell gate 129844
 on:
   pull_request:
