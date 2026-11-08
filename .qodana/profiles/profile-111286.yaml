@@ -5,5 +5,3 @@ inspections:
     enabled: true
     options:
       limit: 6
-  - inspection: OverlyComplexMethod
-    enabled: true
