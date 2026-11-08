@@ -45,6 +45,12 @@ public class Fleet implements IFleet
 		return randomFleet;
 	}
 
+	public void testarMetodoLongo(int p1, int p2, int p3, int p4, int p5, int p6) {
+		// Método criado propositadamente para testar o limite de parâmetros do Qodana
+		int soma = p1 + p2 + p3 + p4 + p5 + p6;
+		System.out.println("Soma: " + soma);
+	}
+
 
     // -----------------------------------------------------
 
