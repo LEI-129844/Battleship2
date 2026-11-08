@@ -1,0 +1,11 @@
+# 111286 Eduardo Fernandes
+profile:
+  base:
+    name: empty
+  inspections:
+    - inspection: OverlyLongMethod
+      enabled: true
+      options:
+        maxMethodLength: 30
+    - inspection: OverlyComplexMethod
+      enabled: true
