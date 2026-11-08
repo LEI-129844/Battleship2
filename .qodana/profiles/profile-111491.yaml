@@ -1,10 +1,10 @@
 # 111491 - Tomás Leal
 # Long Parameter List: inspeção "Method with too many parameters" (ID ParametersPerMethod).
-# m_limit = 3 -> assinala métodos com 4 ou mais parâmetros (equivalente a NOPM >= 4 do MetricsTree).
+# m_limit = 5 (valor por omissão do IntelliJ) -> assinala métodos com 6 ou mais parâmetros.
 name: "Long Parameter List 111491"
 baseProfile: empty
 inspections:
   - inspection: ParametersPerMethod
     enabled: true
     options:
-      m_limit: 3
+      m_limit: 5
