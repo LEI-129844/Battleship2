@@ -12,9 +12,9 @@ Cheiro escolhido: **Long Method** (Fowler), formalizado no livro como **Brain Me
 
 ## Execuções do quality gate
 
-- Execução que falha: _(ligação)_
-- Execução que passa: _(ligação)_
+- Execução que falha: [_(ligação)_](https://github.com/LEI-129844/Battleship2/actions/runs/42501042261)
+- Execução que passa: [_(ligação)_](https://github.com/LEI-129844/Battleship2/actions/runs/42498173010)
 
 ## Reflexão
 
-_(3–4 frases: o que a ferramenta detetou, falsos positivos/negativos, sensibilidade aos limiares, limitações face ao livro.)_
+A ferramenta detetou métodos com CC mais alto com alguns falsos positivos, por exemplo nos construtores dos barcos.
