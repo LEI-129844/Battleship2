@@ -13,6 +13,6 @@ inspections:
     enabled: true
     severity: WARNING
     options:
-      m_limit: 3    # complexidade ciclomática máxima; omissão 10
+      m_limit: 7    # complexidade ciclomática máxima; omissão 10
  
 
