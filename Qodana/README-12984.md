@@ -1,4 +1,4 @@
-# 129844 - Nome do Aluno — Qodana: Long Method
+# 129844 - Henrique Fernandes — Qodana: Long Method
 
 Cheiro escolhido: **Long Method** (Fowler), formalizado no livro como **Brain Method** (Lanza & Marinescu, pp. 92–93).
 
