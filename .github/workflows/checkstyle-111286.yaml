@@ -19,10 +19,6 @@ jobs:
           java-version: '21'
 
       - name: Run Checkstyle
-        uses: checkstyle/action-checkstyle@master
-        with:
-          level: 'error'
-          config_xml: 'Checkstyle/checkstyle-111286.xml'
-          source_dir: 'src'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sL https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.14.2/checkstyle-10.14.2-all.jar -o checkstyle.jar
+          java -jar checkstyle.jar -c Checkstyle/checkstyle-111286.xml src/
