@@ -1,15 +1,18 @@
-# 129844 - Nome do Aluno
+# 129844 - Henrique Fernandes
 # Long Method (Fowler) ~ Brain Method (Lanza & Marinescu, pp. 92-93)
+# IDs = shortName da inspeção (NÃO os IDs de @SuppressWarnings OverlyLongMethod / OverlyComplexMethod)
 name: "long-method-129844"
 baseProfile: empty
 inspections:
-  - inspection: OverlyLongMethod
+  - inspection: NonCommentSourceStatements   # "Overly long method"
     enabled: true
     severity: WARNING
     options:
-      m_limit: 10   # statements (NCSS), não linhas; valor inicial ~ "Very High" LOC/Method do livro (19.5)
-  - inspection: OverlyComplexMethod
+      m_limit: 15   # nº máximo de statements (NCSS), não linhas; omissão 30
+  - inspection: CyclomaticComplexity         # "Overly complex method"
     enabled: true
     severity: WARNING
     options:
-      m_limit: 3    # complexidade ciclomática; valor inicial ~ "Very High" de CC no MetricsTree
+      m_limit: 7    # complexidade ciclomática máxima; omissão 10
+ 
+
