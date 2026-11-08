@@ -1,0 +1,9 @@
+# 111286
+baseProfile: empty
+inspections:
+  - inspection: MagicNumber
+    enabled: true
+    options:
+      ignoreInHashCode: true
+      ignoreInTestCode: true
+

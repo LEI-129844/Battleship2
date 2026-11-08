@@ -1,0 +1,32 @@
+# 111286
+name: Qodana smell gate 111286
+
+on:
+  pull_request:
+  push:
+    branches: [main, '111286-*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  qodana-111286:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: JetBrains/qodana-action@v2026.2
+        with:
+          args: --config qodana-111286.yaml
+          pr-mode: ${{ github.event_name == 'pull_request' }}
+          upload-result: true
+          use-annotations: true
+          post-pr-comment: true
+          artifact-name: qodana-report-111286
+          primary-cache-key: qodana-111286-${{ github.ref }}-${{ github.sha }}
+          additional-cache-key: qodana-111286-${{ github.ref }}
