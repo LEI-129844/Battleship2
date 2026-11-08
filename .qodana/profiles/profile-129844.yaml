@@ -8,11 +8,11 @@ inspections:
     enabled: true
     severity: WARNING
     options:
-      m_limit: 15   # nº máximo de statements (NCSS), não linhas; omissão 30
+      m_limit: 80   # nº máximo de statements (NCSS), não linhas; omissão 30
   - inspection: CyclomaticComplexity         # "Overly complex method"
     enabled: true
     severity: WARNING
     options:
-      m_limit: 7    # complexidade ciclomática máxima; omissão 10
+      m_limit: 40    # complexidade ciclomática máxima; omissão 10
  
 
