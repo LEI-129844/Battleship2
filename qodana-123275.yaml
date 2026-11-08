@@ -1,0 +1,18 @@
+# 123275 - Gonçalo Silva
+version: "1.0"
+linter: jetbrains/qodana-jvm-community:2026.2
+projectJDK: "21"
+profile:
+  path: .qodana/profiles/profile-123275.yaml
+failureConditions:
+  severityThresholds:
+    any: 0
+# Classes de teste têm muitos métodos pequenos por natureza (ex.: PositionTest, 26 métodos):
+# não são o cheiro Large Class, por isso ficam fora das duas inspeções.
+exclude:
+  - name: MethodCount
+    paths:
+      - src/test
+  - name: ClassComplexity
+    paths:
+      - src/test

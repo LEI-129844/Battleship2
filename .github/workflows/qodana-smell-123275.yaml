@@ -1,0 +1,29 @@
+# 123275 - Gonçalo Silva
+name: Qodana smell gate 123275
+on:
+  pull_request:
+  push:
+    branches: [main, '123275-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+jobs:
+  qodana-123275:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Qodana - Large Class (123275)
+        uses: JetBrains/qodana-action@v2026.2
+        with:
+          args: --config qodana-123275.yaml
+          pr-mode: false
+          use-annotations: true
+          post-pr-comment: true
+          upload-result: true
+          artifact-name: qodana-report-123275
+          primary-cache-key: qodana-123275-${{ github.ref }}-${{ github.sha }}
+          additional-cache-key: qodana-123275-${{ github.ref }}
