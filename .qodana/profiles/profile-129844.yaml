@@ -1,0 +1,15 @@
+# 129844 - Nome do Aluno
+# Long Method (Fowler) ~ Brain Method (Lanza & Marinescu, pp. 92-93)
+name: "long-method-129844"
+baseProfile: empty
+inspections:
+  - inspection: OverlyLongMethod
+    enabled: true
+    severity: WARNING
+    options:
+      m_limit: 20   # statements (NCSS), não linhas; valor inicial ~ "Very High" LOC/Method do livro (19.5)
+  - inspection: OverlyComplexMethod
+    enabled: true
+    severity: WARNING
+    options:
+      m_limit: 7    # complexidade ciclomática; valor inicial ~ "Very High" de CC no MetricsTree
