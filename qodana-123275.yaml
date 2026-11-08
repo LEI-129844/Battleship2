@@ -7,3 +7,12 @@ profile:
 failureConditions:
   severityThresholds:
     any: 0
+# Classes de teste têm muitos métodos pequenos por natureza (ex.: PositionTest, 26 métodos):
+# não são o cheiro Large Class, por isso ficam fora das duas inspeções.
+exclude:
+  - name: MethodCount
+    paths:
+      - src/test
+  - name: ClassComplexity
+    paths:
+      - src/test
