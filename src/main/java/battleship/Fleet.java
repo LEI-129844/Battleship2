@@ -12,10 +12,10 @@ import java.util.List;
 public class Fleet implements IFleet
 {
 	// Atributos de teste para disparar o limite de 10 do Qodana
-	private int f1 = 1; private int f2 = 2; private int f3 = 3;
-	private int f4 = 4; private int f5 = 5; private int f6 = 6;
-	private int f7 = 7; private int f8 = 8; private int f9 = 9;
-	private int f10 = 10; private int f11 = 11; // 11º atributo rebenta o limite!
+	private int a1=1, a2=2, a3=3, a4=4, a5=5, a6=6, a7=7, a8=8, a9=9, a10=10, a11=11;
+	public void usarAtributosParaTesteQodana() {
+		System.out.println(a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11);
+	}
 	/**
 	 * Creates a randomly generated fleet containing ships of various predefined types.
 	 * Each ship is assigned a random bearing and position. If a ship cannot be added
