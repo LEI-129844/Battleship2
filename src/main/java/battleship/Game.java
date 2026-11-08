@@ -73,7 +73,7 @@ public class Game implements IGame
             }
     }
 
-    private static void PrintBoardFrame(char[][] map) {
+    private static void printBoardFrame(char[][] map) {
         System.out.println();
         System.out.print("    ");
         for (int col = 0; col < BOARD_SIZE; col++) {
