@@ -1,7 +1,8 @@
 # 111286
 baseProfile: empty
 inspections:
-  - inspection: ClassWithTooManyFields
+  - inspection: MagicNumber
     enabled: true
     options:
-      limit: 6
+      ignoreInHashCode: true
+      ignoreInTestCode: true

@@ -12,9 +12,11 @@ import java.util.List;
 public class Fleet implements IFleet
 {
 	// Atributos de teste para disparar o limite de 10 do Qodana
-	private int a1=1, a2=2, a3=3, a4=4, a5=5, a6=6, a7=7, a8=8, a9=9, a10=10, a11=11;
-	public void usarAtributosParaTesteQodana() {
-		System.out.println(a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11);
+	public void testeQodana() {
+		int x = 428; // 428 é um "Magic Number", não é constante. O Qodana detesta isto!
+		if (x == 579) {
+			System.out.println("Erro provocado");
+		}
 	}
 	/**
 	 * Creates a randomly generated fleet containing ships of various predefined types.
