@@ -1,0 +1,11 @@
+# 111491 - Tomás Leal
+# Long Parameter List: inspeção "Method with too many parameters" (ID ParametersPerMethod).
+# m_limit = 4 -> assinala métodos com 5 ou mais parâmetros
+# (equivalente ao limite "Very-high" de NOPM = 5 no MetricsTree).
+name: "Long Parameter List 111491"
+baseProfile: empty
+inspections:
+  - inspection: ParametersPerMethod
+    enabled: true
+    options:
+      m_limit: 4
