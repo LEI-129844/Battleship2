@@ -11,11 +11,8 @@ import java.util.List;
 
 public class ScoreboardManager {
     private static final String FILE_PATH = "scoreboard.json";
-
-
-
-        // 111491 - Tomás Leal: constante com nome fora da convenção, para provocar o ConstantName (Ficha 3, Tarefa 2B.4)
-    private static final int maxShips = 5;
+    // 111491 - Tomás Leal: nome corrigido para MAX_SHIPS, segundo a convenção ConstantName (Ficha 3, Tarefa 2B.4)
+    private static final int MAX_SHIPS = 5;
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public static List<ScoreEntry> carregarScores() {
