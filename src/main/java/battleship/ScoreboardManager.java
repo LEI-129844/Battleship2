@@ -53,13 +53,11 @@ public class ScoreboardManager {
         System.out.println("========================================\n");
     }
 
-    // 111491 - Tomás Leal: método criado de propósito para provocar o cheiro
-    // Long Parameter List e testar o quality gate do Qodana (Ficha 3, Tarefa 2A, passo 9).
-    public static String descreverPartida(String jogador, String data, int totalTiros,
-                                          int naviosAfundados, int tirosNaAgua, int tirosRepetidos,
-                                          int tirosExteriores, int duracaoSegundos, boolean vitoria) {
-        return String.format("%s (%s): %s | tiros: %d | afundados: %d | água: %d | repetidos: %d | exteriores: %d | duração: %ds",
-                jogador, data, vitoria ? "VITÓRIA" : "DERROTA", totalTiros, naviosAfundados,
-                tirosNaAgua, tirosRepetidos, tirosExteriores, duracaoSegundos);
+    // 111491 - Tomás Leal: correção do cheiro Long Parameter List com a refabricação
+    // Preserve Whole Object (Fowler): em vez de 9 valores soltos, o método recebe o objeto ScoreEntry.
+    public static String descreverPartida(String jogador, ScoreEntry partida) {
+        return String.format("%s (%s): %s | tiros: %d | afundados: %d",
+                jogador, partida.getData(), partida.isVitoria() ? "VITÓRIA" : "DERROTA",
+                partida.getTotalTiros(), partida.getNaviosAfundados());
     }
 }
