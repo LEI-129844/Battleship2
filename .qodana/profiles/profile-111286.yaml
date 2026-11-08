@@ -4,6 +4,6 @@ inspections:
   - inspection: ClassWithTooManyFields
     enabled: true
     options:
-      m_limit: 6
+      limit: 6
   - inspection: OverlyComplexMethod
     enabled: true
