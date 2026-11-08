@@ -8,7 +8,7 @@
         <module name="MethodName">
             <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
             <message key="name.invalidPattern"
-                     value="O nome do método ''{0}'' não cumpre a convenção camelCase (ex: calcularPontos)."/>
+                     value="O nome do método ''{0}'' deve seguir o formato camelCase (ex: calcularPontos)."/>
         </module>
     </module>
 </module>

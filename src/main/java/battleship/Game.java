@@ -39,7 +39,7 @@ public class Game implements IGame
         if (show_shots)
             printBoardShots(moves, map);
 
-        printBoardFrame(map);
+        PrintBoardFrame(map);
 
         if (showLegend) {
             System.out.println("          LEGENDA");
@@ -73,7 +73,7 @@ public class Game implements IGame
             }
     }
 
-    private static void printBoardFrame(char[][] map) {
+    private static void PrintBoardFrame(char[][] map) {
         System.out.println();
         System.out.print("    ");
         for (int col = 0; col < BOARD_SIZE; col++) {

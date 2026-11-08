@@ -11,6 +11,11 @@ import java.util.List;
  */
 public class Fleet implements IFleet
 {
+	// Atributos de teste para disparar o limite de 10 do Qodana
+	private int f1 = 1; private int f2 = 2; private int f3 = 3;
+	private int f4 = 4; private int f5 = 5; private int f6 = 6;
+	private int f7 = 7; private int f8 = 8; private int f9 = 9;
+	private int f10 = 10; private int f11 = 11; // 11º atributo rebenta o limite!
 	/**
 	 * Creates a randomly generated fleet containing ships of various predefined types.
 	 * Each ship is assigned a random bearing and position. If a ship cannot be added
@@ -43,12 +48,6 @@ public class Fleet implements IFleet
 			}
 		}
 		return randomFleet;
-	}
-
-	public void testarMetodoLongo(int p1, int p2, int p3, int p4, int p5, int p6) {
-		// Método criado propositadamente para testar o limite de parâmetros do Qodana
-		int soma = p1 + p2 + p3 + p4 + p5 + p6;
-		System.out.println("Soma: " + soma);
 	}
 
 

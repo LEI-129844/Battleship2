@@ -1,11 +1,9 @@
-# 111286 Eduardo Fernandes
-profile:
-  base:
-    name: empty
-  inspections:
-    - inspection: OverlyLongMethod
-      enabled: true
-      options:
-        maxMethodLength: 30
-    - inspection: OverlyComplexMethod
-      enabled: true
+# 111286
+baseProfile: empty
+inspections:
+  - inspection: ClassWithTooManyFields
+    enabled: true
+    options:
+      m_limit: 10
+  - inspection: OverlyComplexMethod
+    enabled: true
