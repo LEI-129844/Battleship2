@@ -8,4 +8,4 @@ inspections:
   - inspection: ParametersPerMethod
     enabled: true
     options:
-      m_limit: 4
+      m_limit: 3
