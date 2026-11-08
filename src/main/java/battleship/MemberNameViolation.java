@@ -6,9 +6,9 @@ package battleship;
  */
 public final class MemberNameViolation {
 
-    private int Numero_Tiros;
+    private int numeroTiros;
 
     int getShots() {
-        return Numero_Tiros;
+        return numeroTiros;
     }
 }
