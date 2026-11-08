@@ -1,0 +1,18 @@
+# 123275 - Gonçalo Silva
+# Large Class (Fowler) ~ God Class (Lanza & Marinescu): NOM e WMC altos.
+# Inspeções da categoria Java > Class metrics:
+#   - MethodCount     ("Class with too many methods", suppress: ClassWithTooManyMethods) ~ NOM
+#   - ClassComplexity ("Overly complex class",        suppress: OverlyComplexClass)      ~ WMC
+name: "Large Class 123275"
+baseProfile: empty
+inspections:
+  - inspection: MethodCount
+    enabled: true
+    severity: WARNING
+    options:
+      m_limit: 25
+  - inspection: ClassComplexity
+    enabled: true
+    severity: WARNING
+    options:
+      m_limit: 80

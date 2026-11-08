@@ -1,0 +1,21 @@
+# 123275 - Gonçalo Silva
+name: Checkstyle naming gate 123275
+on:
+  pull_request:
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+jobs:
+  checkstyle-123275:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Checkstyle - MemberName (123275)
+        uses: dbelyaev/action-checkstyle@v4.5.0
+        with:
+          checkstyle_config: checkstyle-123275.xml
+          reporter: github-pr-check
+          level: error
+          fail_level: error
+          filter_mode: added
