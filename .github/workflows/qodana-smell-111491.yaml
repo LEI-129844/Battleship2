@@ -13,14 +13,15 @@ jobs:
   qodana-111491:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - name: Qodana - Long Parameter List (111491)
         uses: JetBrains/qodana-action@v2026.2
         with:
-          args: --config,qodana-111491.yaml
+          args: --config qodana-111491.yaml
+          pr-mode: ${{ github.event_name == 'pull_request' }}
           use-annotations: true
           post-pr-comment: true
           upload-result: true
