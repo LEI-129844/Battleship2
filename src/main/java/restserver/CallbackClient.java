@@ -81,9 +81,10 @@ public class CallbackClient {
 			return false;
 		}
 
-		if (response.statusCode() < 200 || response.statusCode() >= 300) {
+		int status = response.statusCode();
+		if (status < 200 || status >= 300) {
 			System.err.printf("[Callback] Student returned HTTP %d: %s%n",
-					response.statusCode(), response.body());
+					status, response.body());
 			return false;
 		}
 
