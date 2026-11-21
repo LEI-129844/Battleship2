@@ -26,8 +26,24 @@ public class Dtos {
 	 * }
 	 */
 	public static class RegistrationRequest {
-		public String playerName;
-		public String callbackUrl;
+		private String playerName;
+		private String callbackUrl;
+
+		public String getPlayerName() {
+			return playerName;
+		}
+
+		public void setPlayerName(String playerName) {
+			this.playerName = playerName;
+		}
+
+		public String getCallbackUrl() {
+			return callbackUrl;
+		}
+
+		public void setCallbackUrl(String callbackUrl) {
+			this.callbackUrl = callbackUrl;
+		}
 	}
 
 	/**

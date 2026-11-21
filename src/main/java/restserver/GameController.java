@@ -48,24 +48,24 @@ public class GameController {
 	public ResponseEntity<?> register(@RequestBody RegistrationRequest request) {
 
 		// Basic validation
-		if (request.playerName == null || request.playerName.isBlank()) {
+		if (request.getPlayerName() == null || request.getPlayerName().isBlank()) {
 			return error(HttpStatus.BAD_REQUEST, "playerName is required");
 		}
-		if (request.callbackUrl == null || request.callbackUrl.isBlank()) {
+		if (request.getCallbackUrl() == null || request.getCallbackUrl().isBlank()) {
 			return error(HttpStatus.BAD_REQUEST, "callbackUrl is required");
 		}
 
 		// Create session — AI fleet is randomised inside GameSession constructor
-		GameSession session = registry.createSession(request.playerName, request.callbackUrl);
+		GameSession session = registry.createSession(request.getPlayerName(), request.getCallbackUrl());
 
 		RegistrationResponse response = new RegistrationResponse();
 		response.gameId       = session.getGameId();
 		response.status       = "REGISTERED";
 		response.shotsPerTurn = session.getShotsPerTurn();
-		response.message      = "Welcome, " + request.playerName + "! Game ready. You shoot first.";
+		response.message      = "Welcome, " + request.getPlayerName() + "! Game ready. You shoot first.";
 
 		System.out.printf("[%s] Registered player '%s' (callback: %s)%n",
-				session.getGameId(), request.playerName, request.callbackUrl);
+				session.getGameId(), request.getPlayerName(), request.getCallbackUrl());
 
 		return ResponseEntity.ok(response);
 	}
