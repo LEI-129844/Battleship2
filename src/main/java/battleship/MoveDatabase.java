@@ -153,11 +153,19 @@ public final class MoveDatabase {
 
         try (Connection connection = openConnection();
              Statement statement = connection.createStatement()) {
-            statement.executeUpdate(createGames);
-            statement.executeUpdate(createShots);
+            createGamesTable(statement, createGames);
+            createShotsTable(statement, createShots);
         } catch (SQLException exception) {
             throw new IllegalStateException("Não foi possível preparar as tabelas SQLite", exception);
         }
+    }
+
+    private void createGamesTable(Statement statement, String sql) throws SQLException {
+        statement.executeUpdate(sql);
+    }
+
+    private void createShotsTable(Statement statement, String sql) throws SQLException {
+        statement.executeUpdate(sql);
     }
 
     private Connection openConnection() throws SQLException {
