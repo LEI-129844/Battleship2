@@ -9,3 +9,8 @@
 | `CallbackClient::sendShots` | Expressão repetida (`response.statusCode()` 3 vezes) | Introduce Variable | 111491 |
 | `CallbackClient::sendShots` | Variável temporária desnecessária (`url`, usada uma só vez) | Inline Variable | 111491 |
 | `Fleet::printShips` | Método que não usa o estado do objeto (`MethodMayBeStatic`, proxy de Feature Envy na Tabela 1) | Make Static | 111491 |
+| `MoveDatabase::saveMove` | Método longo e responsabilidade de preparar/gravar um lote | Extract Method | 111286 |
+| `MoveDatabase::createTables` | Criação de duas tabelas misturada num único método | Extract Method | 111286 |
+| `Tasks::readClassicPosition` | Condicional complexo com dois formatos de entrada | Decompose Conditional | 111286 |
+| `restserver.Dtos::RegistrationRequest` | Dados expostos diretamente através de campos públicos | Encapsulate Field | 111286 |
+| `Ship::stillFloating` | Obtenção repetida da mesma posição dentro do ciclo | Introduce Variable | 111286 |

@@ -75,24 +75,8 @@ public final class MoveDatabase {
 
         try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                for (int index = 0; index < shots.size(); index++) {
-                    IPosition position = shots.get(index);
-                    IGame.ShotResult shotResult = results.get(index);
-
-                    statement.setLong(1, gameId);
-                    statement.setInt(2, move.getNumber());
-                    statement.setInt(3, index + 1);
-                    statement.setString(4, position.getClassicRow() + "" + position.getClassicColumn());
-                    statement.setString(5, describeResult(shotResult));
-                    if (shotResult.ship() == null) {
-                        statement.setNull(6, Types.VARCHAR);
-                    } else {
-                        statement.setString(6, shotResult.ship().getCategory());
-                    }
-                    statement.addBatch();
-                }
-                statement.executeBatch();
+            try {
+                saveShots(connection, sql, gameId, move, shots, results);
                 connection.commit();
             } catch (SQLException exception) {
                 connection.rollback();
@@ -100,6 +84,29 @@ public final class MoveDatabase {
             }
         } catch (SQLException exception) {
             throw new IllegalStateException("Não foi possível guardar a jogada na base de dados", exception);
+        }
+    }
+
+    private void saveShots(Connection connection, String sql, long gameId, IMove move,
+                           List<IPosition> shots, List<IGame.ShotResult> results) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (int index = 0; index < shots.size(); index++) {
+                IPosition position = shots.get(index);
+                IGame.ShotResult shotResult = results.get(index);
+
+                statement.setLong(1, gameId);
+                statement.setInt(2, move.getNumber());
+                statement.setInt(3, index + 1);
+                statement.setString(4, position.getClassicRow() + "" + position.getClassicColumn());
+                statement.setString(5, describeResult(shotResult));
+                if (shotResult.ship() == null) {
+                    statement.setNull(6, Types.VARCHAR);
+                } else {
+                    statement.setString(6, shotResult.ship().getCategory());
+                }
+                statement.addBatch();
+            }
+            statement.executeBatch();
         }
     }
 
