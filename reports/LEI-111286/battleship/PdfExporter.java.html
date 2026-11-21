@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PdfExporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BattleshipGame</a> &gt; <a href="index.source.html" class="el_package">battleship</a> &gt; <span class="el_source">PdfExporter.java</span></div><h1>PdfExporter.java</h1><pre class="source lang-java linenums">package battleship;
+
+import org.openpdf.text.Chunk;
+import org.openpdf.text.Document;
+import org.openpdf.text.DocumentException;
+import org.openpdf.text.Element;
+import org.openpdf.text.Font;
+import org.openpdf.text.PageSize;
+import org.openpdf.text.Paragraph;
+import org.openpdf.text.Phrase;
+import org.openpdf.text.pdf.PdfPCell;
+import org.openpdf.text.pdf.PdfPTable;
+import org.openpdf.text.pdf.PdfWriter;
+
+import java.awt.Color;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Exporta o histórico de jogadas de um jogo de Batalha Naval para um ficheiro PDF,
+ * usando a biblioteca OpenPDF (obtida no Maven Central).
+ * &lt;p&gt;
+ * O relatório inclui:
+ * &lt;ul&gt;
+ *     &lt;li&gt;data/hora da exportação e estatísticas gerais do jogo;&lt;/li&gt;
+ *     &lt;li&gt;uma tabela com todas as rajadas (nº, tiros disparados e resultado);&lt;/li&gt;
+ *     &lt;li&gt;o tabuleiro com a frota e os tiros recebidos.&lt;/li&gt;
+ * &lt;/ul&gt;
+ */
+public final class PdfExporter {
+
+    /** Pasta onde os relatórios PDF são gravados. */
+    public static final String REPORTS_DIR = &quot;reports&quot;;
+
+<span class="fc" id="L43">    private static final DateTimeFormatter FILE_TS = DateTimeFormatter.ofPattern(&quot;yyyyMMdd_HHmmss&quot;);</span>
+<span class="fc" id="L44">    private static final DateTimeFormatter HUMAN_TS = DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy HH:mm:ss&quot;);</span>
+
+<span class="fc" id="L46">    private static final Font TITLE_FONT = new Font(Font.HELVETICA, 18, Font.BOLD, new Color(0, 51, 102));</span>
+<span class="fc" id="L47">    private static final Font SECTION_FONT = new Font(Font.HELVETICA, 13, Font.BOLD, new Color(0, 51, 102));</span>
+<span class="fc" id="L48">    private static final Font TEXT_FONT = new Font(Font.HELVETICA, 10, Font.NORMAL);</span>
+<span class="fc" id="L49">    private static final Font HEADER_FONT = new Font(Font.HELVETICA, 10, Font.BOLD, Color.WHITE);</span>
+<span class="fc" id="L50">    private static final Font BOARD_FONT = new Font(Font.COURIER, 10, Font.BOLD);</span>
+
+<span class="fc" id="L52">    private static final Color HEADER_BG = new Color(0, 51, 102);</span>
+<span class="fc" id="L53">    private static final Color WATER_BG = new Color(204, 229, 255);</span>
+<span class="fc" id="L54">    private static final Color SHIP_BG = new Color(160, 160, 160);</span>
+<span class="fc" id="L55">    private static final Color HIT_BG = new Color(220, 53, 69);</span>
+<span class="fc" id="L56">    private static final Color MISS_BG = new Color(255, 255, 255);</span>
+<span class="fc" id="L57">    private static final Color ADJACENT_BG = new Color(230, 240, 250);</span>
+
+    private PdfExporter() {
+    }
+
+    /**
+     * Gera o PDF do jogo na pasta {@value #REPORTS_DIR}, com o nome {@code jogo_&lt;data&gt;.pdf}.
+     *
+     * @param game o jogo a exportar (não pode ser nulo)
+     * @return o caminho do ficheiro PDF criado
+     * @throws IOException se não for possível criar a pasta ou o ficheiro
+     */
+    public static Path export(IGame game) throws IOException {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        assert game != null;</span>
+
+<span class="nc" id="L72">        Path dir = Path.of(REPORTS_DIR);</span>
+<span class="nc" id="L73">        Files.createDirectories(dir);</span>
+<span class="nc" id="L74">        Path file = dir.resolve(&quot;jogo_&quot; + LocalDateTime.now().format(FILE_TS) + &quot;.pdf&quot;);</span>
+
+<span class="nc" id="L76">        try (OutputStream out = new FileOutputStream(file.toFile())) {</span>
+<span class="nc" id="L77">            export(game, out);</span>
+        }
+<span class="nc" id="L79">        return file;</span>
+    }
+
+    /**
+     * Escreve o relatório PDF do jogo para o {@link OutputStream} indicado.
+     *
+     * @param game o jogo a exportar
+     * @param out  destino do PDF
+     */
+    public static void export(IGame game, OutputStream out) {
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        assert game != null;</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        assert out != null;</span>
+
+<span class="fc" id="L92">        Document doc = new Document(PageSize.A4, 40, 40, 40, 40);</span>
+        try {
+<span class="fc" id="L94">            PdfWriter.getInstance(doc, out);</span>
+<span class="fc" id="L95">            doc.open();</span>
+
+<span class="fc" id="L97">            Paragraph title = new Paragraph(&quot;Batalha Naval - Histórico de Jogadas&quot;, TITLE_FONT);</span>
+<span class="fc" id="L98">            title.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L99">            title.setSpacingAfter(6);</span>
+<span class="fc" id="L100">            doc.add(title);</span>
+
+<span class="fc" id="L102">            Paragraph date = new Paragraph(&quot;Exportado em &quot; + LocalDateTime.now().format(HUMAN_TS), TEXT_FONT);</span>
+<span class="fc" id="L103">            date.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L104">            date.setSpacingAfter(14);</span>
+<span class="fc" id="L105">            doc.add(date);</span>
+
+<span class="fc" id="L107">            addSummary(doc, game);</span>
+<span class="fc" id="L108">            addMovesTable(doc, game.getAlienMoves());</span>
+<span class="fc" id="L109">            addBoard(doc, game);</span>
+<span class="nc" id="L110">        } catch (DocumentException e) {</span>
+<span class="nc" id="L111">            throw new IllegalStateException(&quot;Erro ao gerar o PDF das jogadas&quot;, e);</span>
+        } finally {
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">            if (doc.isOpen())</span>
+<span class="fc" id="L114">                doc.close();</span>
+        }
+<span class="fc" id="L116">    }</span>
+
+    /** Secção com as estatísticas gerais do jogo. */
+    private static void addSummary(Document doc, IGame game) {
+<span class="fc" id="L120">        doc.add(new Paragraph(&quot;Resumo&quot;, SECTION_FONT));</span>
+
+<span class="fc" id="L122">        int moves = game.getAlienMoves().size();</span>
+<span class="fc" id="L123">        String text = &quot;Rajadas disparadas: &quot; + moves</span>
+                + &quot;   |   Tiros: &quot; + moves * Game.NUMBER_SHOTS
+<span class="fc" id="L125">                + &quot;   |   Acertos: &quot; + game.getHits()</span>
+<span class="fc" id="L126">                + &quot;   |   Navios afundados: &quot; + game.getSunkShips()</span>
+<span class="fc" id="L127">                + &quot;   |   Navios a flutuar: &quot; + game.getRemainingShips()</span>
+<span class="fc" id="L128">                + &quot;\nTiros repetidos: &quot; + game.getRepeatedShots()</span>
+<span class="fc" id="L129">                + &quot;   |   Tiros fora do tabuleiro: &quot; + game.getInvalidShots();</span>
+<span class="fc" id="L130">        Paragraph p = new Paragraph(text, TEXT_FONT);</span>
+<span class="fc" id="L131">        p.setSpacingAfter(12);</span>
+<span class="fc" id="L132">        doc.add(p);</span>
+<span class="fc" id="L133">    }</span>
+
+    /** Tabela com uma linha por rajada: número, tiros e resultado. */
+    private static void addMovesTable(Document doc, List&lt;IMove&gt; moves) {
+<span class="fc" id="L137">        doc.add(new Paragraph(&quot;Rajadas&quot;, SECTION_FONT));</span>
+
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if (moves.isEmpty()) {</span>
+<span class="nc" id="L140">            doc.add(new Paragraph(&quot;Ainda não foi disparada nenhuma rajada.&quot;, TEXT_FONT));</span>
+<span class="nc" id="L141">            doc.add(Chunk.NEWLINE);</span>
+<span class="nc" id="L142">            return;</span>
+        }
+
+<span class="fc" id="L145">        PdfPTable table = new PdfPTable(new float[]{1.2f, 2.5f, 6.3f});</span>
+<span class="fc" id="L146">        table.setWidthPercentage(100);</span>
+<span class="fc" id="L147">        table.setSpacingBefore(6);</span>
+<span class="fc" id="L148">        table.setHeaderRows(1);</span>
+
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        for (String header : new String[]{&quot;Rajada&quot;, &quot;Tiros&quot;, &quot;Resultado&quot;})</span>
+<span class="fc" id="L151">            table.addCell(headerCell(header));</span>
+
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        for (IMove move : moves) {</span>
+<span class="fc" id="L154">            table.addCell(textCell(String.valueOf(move.getNumber()), Element.ALIGN_CENTER));</span>
+<span class="fc" id="L155">            table.addCell(textCell(shotsToText(move.getShots()), Element.ALIGN_LEFT));</span>
+<span class="fc" id="L156">            table.addCell(textCell(describeResults(move.getShotResults()), Element.ALIGN_LEFT));</span>
+<span class="fc" id="L157">        }</span>
+<span class="fc" id="L158">        doc.add(table);</span>
+<span class="fc" id="L159">        doc.add(Chunk.NEWLINE);</span>
+<span class="fc" id="L160">    }</span>
+
+    /** Desenha o tabuleiro da frota com os tiros recebidos, como uma grelha colorida. */
+    private static void addBoard(Document doc, IGame game) {
+<span class="fc" id="L164">        doc.add(new Paragraph(&quot;Tabuleiro final&quot;, SECTION_FONT));</span>
+
+<span class="fc" id="L166">        char[][] map = buildMap(game.getMyFleet(), game.getAlienMoves());</span>
+
+<span class="fc" id="L168">        PdfPTable board = new PdfPTable(Game.BOARD_SIZE + 1);</span>
+<span class="fc" id="L169">        board.setWidthPercentage(60);</span>
+<span class="fc" id="L170">        board.setSpacingBefore(6);</span>
+
+<span class="fc" id="L172">        board.addCell(boardCell(&quot; &quot;, HEADER_BG, Color.WHITE));</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">        for (int c = 0; c &lt; Game.BOARD_SIZE; c++)</span>
+<span class="fc" id="L174">            board.addCell(boardCell(String.valueOf(c + 1), HEADER_BG, Color.WHITE));</span>
+
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        for (int r = 0; r &lt; Game.BOARD_SIZE; r++) {</span>
+<span class="fc" id="L177">            board.addCell(boardCell(String.valueOf((char) ('A' + r)), HEADER_BG, Color.WHITE));</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">            for (int c = 0; c &lt; Game.BOARD_SIZE; c++) {</span>
+<span class="fc" id="L179">                char m = map[r][c];</span>
+<span class="fc" id="L180">                board.addCell(boardCell(String.valueOf(m), colorFor(m), Color.BLACK));</span>
+            }
+        }
+<span class="fc" id="L183">        doc.add(board);</span>
+
+<span class="fc" id="L185">        Paragraph legend = new Paragraph(</span>
+                &quot;Legenda:  # navio   * tiro certeiro   o tiro na água   - adjacente a navio afundado   . água&quot;,
+                TEXT_FONT);
+<span class="fc" id="L188">        legend.setSpacingBefore(6);</span>
+<span class="fc" id="L189">        doc.add(legend);</span>
+<span class="fc" id="L190">    }</span>
+
+    /**
+     * Constrói a matriz do tabuleiro com os mesmos símbolos usados na consola
+     * (ver {@link Game#printBoard}).
+     */
+    static char[][] buildMap(IFleet fleet, List&lt;IMove&gt; moves) {
+<span class="fc" id="L197">        char[][] map = new char[Game.BOARD_SIZE][Game.BOARD_SIZE];</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        for (char[] row : map)</span>
+<span class="fc" id="L199">            java.util.Arrays.fill(row, '.');</span>
+
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        for (IShip ship : fleet.getShips()) {</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">            if (!ship.stillFloating())</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">                for (IPosition adj : ship.getAdjacentPositions())</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">                    if (adj.isInside())</span>
+<span class="fc" id="L205">                        map[adj.getRow()][adj.getColumn()] = '-';</span>
+<span class="fc" id="L206">        }</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        for (IShip ship : fleet.getShips())</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">            for (IPosition pos : ship.getPositions())</span>
+<span class="fc" id="L209">                map[pos.getRow()][pos.getColumn()] = '#';</span>
+
+<span class="fc bfc" id="L211" title="All 2 branches covered.">        for (IMove move : moves)</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            for (IPosition shot : move.getShots())</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">                if (shot.isInside()) {</span>
+<span class="fc" id="L214">                    char cur = map[shot.getRow()][shot.getColumn()];</span>
+<span class="pc bpc" id="L215" title="1 of 4 branches missed.">                    map[shot.getRow()][shot.getColumn()] = (cur == '#' || cur == '*') ? '*' : 'o';</span>
+                }
+<span class="fc" id="L217">        return map;</span>
+    }
+
+    /** Converte a lista de tiros em texto, ex.: &quot;A5, C10, F5&quot;. */
+    static String shotsToText(List&lt;IPosition&gt; shots) {
+<span class="fc" id="L222">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        for (IPosition shot : shots) {</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">            if (!sb.isEmpty())</span>
+<span class="fc" id="L225">                sb.append(&quot;, &quot;);</span>
+<span class="fc" id="L226">            sb.append(shot);</span>
+<span class="fc" id="L227">        }</span>
+<span class="fc" id="L228">        return sb.toString();</span>
+    }
+
+    /**
+     * Descreve em português o resultado de uma rajada,
+     * ex.: &quot;1 Barca ao fundo, 1 tiro em Nau, 1 tiro na água&quot;.
+     */
+    static String describeResults(List&lt;IGame.ShotResult&gt; results) {
+<span class="fc" id="L236">        int missed = 0, repeated = 0, outside = 0;</span>
+<span class="fc" id="L237">        Map&lt;String, Integer&gt; sunk = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L238">        Map&lt;String, Integer&gt; hits = new LinkedHashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        for (IGame.ShotResult r : results) {</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">            if (!r.valid())</span>
+<span class="fc" id="L242">                outside++;</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">            else if (r.repeated())</span>
+<span class="nc" id="L244">                repeated++;</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">            else if (r.ship() == null)</span>
+<span class="fc" id="L246">                missed++;</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">            else if (r.sunk())</span>
+<span class="fc" id="L248">                sunk.merge(r.ship().getCategory(), 1, Integer::sum);</span>
+            else
+<span class="nc" id="L250">                hits.merge(r.ship().getCategory(), 1, Integer::sum);</span>
+<span class="fc" id="L251">        }</span>
+
+<span class="fc" id="L253">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L254">        sunk.forEach((type, n) -&gt; append(sb, n + &quot; &quot; + type + &quot; ao fundo&quot;));</span>
+<span class="pc bnc" id="L255" title="All 2 branches missed.">        hits.forEach((type, n) -&gt; append(sb, n + (n &gt; 1 ? &quot; tiros em &quot; : &quot; tiro em &quot;) + type));</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">        if (missed &gt; 0)</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">            append(sb, missed + (missed &gt; 1 ? &quot; tiros na água&quot; : &quot; tiro na água&quot;));</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">        if (repeated &gt; 0)</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">            append(sb, repeated + (repeated &gt; 1 ? &quot; tiros repetidos&quot; : &quot; tiro repetido&quot;));</span>
+<span class="fc bfc" id="L260" title="All 2 branches covered.">        if (outside &gt; 0)</span>
+<span class="pc bpc" id="L261" title="1 of 2 branches missed.">            append(sb, outside + (outside &gt; 1 ? &quot; tiros fora do tabuleiro&quot; : &quot; tiro fora do tabuleiro&quot;));</span>
+<span class="fc" id="L262">        return sb.toString();</span>
+    }
+
+    private static void append(StringBuilder sb, String part) {
+<span class="fc bfc" id="L266" title="All 2 branches covered.">        if (!sb.isEmpty())</span>
+<span class="fc" id="L267">            sb.append(&quot;, &quot;);</span>
+<span class="fc" id="L268">        sb.append(part);</span>
+<span class="fc" id="L269">    }</span>
+
+    private static Color colorFor(char marker) {
+<span class="pc bpc" id="L272" title="1 of 5 branches missed.">        return switch (marker) {</span>
+<span class="nc" id="L273">            case '#' -&gt; SHIP_BG;</span>
+<span class="fc" id="L274">            case '*' -&gt; HIT_BG;</span>
+<span class="fc" id="L275">            case 'o' -&gt; MISS_BG;</span>
+<span class="fc" id="L276">            case '-' -&gt; ADJACENT_BG;</span>
+<span class="fc" id="L277">            default -&gt; WATER_BG;</span>
+        };
+    }
+
+    private static PdfPCell headerCell(String text) {
+<span class="fc" id="L282">        PdfPCell cell = new PdfPCell(new Phrase(text, HEADER_FONT));</span>
+<span class="fc" id="L283">        cell.setBackgroundColor(HEADER_BG);</span>
+<span class="fc" id="L284">        cell.setHorizontalAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L285">        cell.setPadding(5);</span>
+<span class="fc" id="L286">        return cell;</span>
+    }
+
+    private static PdfPCell textCell(String text, int alignment) {
+<span class="fc" id="L290">        PdfPCell cell = new PdfPCell(new Phrase(text, TEXT_FONT));</span>
+<span class="fc" id="L291">        cell.setHorizontalAlignment(alignment);</span>
+<span class="fc" id="L292">        cell.setPadding(4);</span>
+<span class="fc" id="L293">        return cell;</span>
+    }
+
+    private static PdfPCell boardCell(String text, Color background, Color textColor) {
+<span class="fc" id="L297">        Font font = new Font(BOARD_FONT);</span>
+<span class="fc" id="L298">        font.setColor(textColor);</span>
+<span class="fc" id="L299">        PdfPCell cell = new PdfPCell(new Phrase(text, font));</span>
+<span class="fc" id="L300">        cell.setBackgroundColor(background);</span>
+<span class="fc" id="L301">        cell.setHorizontalAlignment(Element.ALIGN_CENTER);</span>
+<span class="fc" id="L302">        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);</span>
+<span class="fc" id="L303">        cell.setMinimumHeight(18);</span>
+<span class="fc" id="L304">        return cell;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

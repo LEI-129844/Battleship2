@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameSession.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BattleshipGame</a> &gt; <a href="index.source.html" class="el_package">restserver</a> &gt; <span class="el_source">GameSession.java</span></div><h1>GameSession.java</h1><pre class="source lang-java linenums">package restserver;
+
+import battleship.Fleet;
+import battleship.Game;
+import battleship.IGame;
+
+/**
+ * Holds all state for one active game between the AI opponent and a student player.
+ *
+ * One GameSession is created per registration (m0) and stored in the GameRegistry
+ * keyed by its gameId. It wraps the existing Game class without modifying it.
+ */
+public class GameSession {
+
+	/** Unique identifier for this game, returned to the student on registration. */
+	private final String gameId;
+
+	/** The student's name, for logging / display purposes. */
+	private final String playerName;
+
+	/**
+	 * The URL of the student's server where the AI will POST its shots (m2a).
+	 * Example: &quot;http://student-host:9090&quot;
+	 * The AI will call POST {callbackUrl}/game/{gameId}/shots
+	 */
+	private final String callbackUrl;
+
+	/**
+	 * The core game object from the existing codebase.
+	 * myFleet = AI's fleet  (receives student's shots)
+	 * alienFleet = tracked knowledge of student's fleet
+	 */
+	private final IGame game;
+
+	/** Number of shots fired per turn (matches Game.NUMBER_SHOTS = 3). */
+	private final int shotsPerTurn;
+
+	/** True once one fleet is completely sunk. */
+	private boolean gameOver;
+
+	/** &quot;AI_WINS&quot; or &quot;STUDENT_WINS&quot; — set when gameOver becomes true. */
+	private String winner;
+
+	// -------------------------------------------------------------------------
+
+<span class="fc" id="L46">	public GameSession(String gameId, String playerName, String callbackUrl) {</span>
+<span class="fc" id="L47">		this.gameId      = gameId;</span>
+<span class="fc" id="L48">		this.playerName  = playerName;</span>
+<span class="fc" id="L49">		this.callbackUrl = callbackUrl;</span>
+<span class="fc" id="L50">		this.game        = new Game(Fleet.createRandom()); // AI places its own fleet randomly</span>
+<span class="fc" id="L51">		this.shotsPerTurn = Game.NUMBER_SHOTS;</span>
+<span class="fc" id="L52">		this.gameOver    = false;</span>
+<span class="fc" id="L53">		this.winner      = null;</span>
+<span class="fc" id="L54">	}</span>
+
+	// ── Getters ──────────────────────────────────────────────────────────────
+
+<span class="fc" id="L58">	public String getGameId()      { return gameId; }</span>
+<span class="fc" id="L59">	public String getPlayerName()  { return playerName; }</span>
+<span class="fc" id="L60">	public String getCallbackUrl() { return callbackUrl; }</span>
+<span class="fc" id="L61">	public IGame  getGame()        { return game; }</span>
+<span class="fc" id="L62">	public int    getShotsPerTurn(){ return shotsPerTurn; }</span>
+<span class="fc" id="L63">	public boolean isGameOver()    { return gameOver; }</span>
+<span class="fc" id="L64">	public String getWinner()      { return winner; }</span>
+
+	// ── State transitions ────────────────────────────────────────────────────
+
+	public void markAiWins() {
+<span class="fc" id="L69">		this.gameOver = true;</span>
+<span class="fc" id="L70">		this.winner   = &quot;AI_WINS&quot;;</span>
+<span class="fc" id="L71">	}</span>
+
+	public void markStudentWins() {
+<span class="fc" id="L74">		this.gameOver = true;</span>
+<span class="fc" id="L75">		this.winner   = &quot;STUDENT_WINS&quot;;</span>
+<span class="fc" id="L76">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BattleshipGame</a> &gt; <a href="index.source.html" class="el_package">restserver</a> &gt; <span class="el_source">GameController.java</span></div><h1>GameController.java</h1><pre class="source lang-java linenums">package restserver;
+
+import battleship.*;
+import restserver.Dtos.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * REST Controller — exposes the two endpoints of the Battleship protocol.
+ *
+ *   POST /register                    →  m0  register a player
+ *   POST /game/{gameId}/shots         →  m1a receive student shots, fire back (m1b)
+ *                                        then call student callback (m2a/m2b) internally
+ */
+@RestController
+public class GameController {
+
+	private final GameRegistry registry;
+	private final CallbackClient callbackClient;
+	private final AiShotStrategy aiStrategy;
+
+	public GameController(GameRegistry registry,
+						  CallbackClient callbackClient,
+<span class="nc" id="L28">						  AiShotStrategy aiStrategy) {</span>
+<span class="nc" id="L29">		this.registry       = registry;</span>
+<span class="nc" id="L30">		this.callbackClient = callbackClient;</span>
+<span class="nc" id="L31">		this.aiStrategy     = aiStrategy;</span>
+<span class="nc" id="L32">	}</span>
+
+	// =========================================================================
+	// m0 — POST /register
+	// =========================================================================
+
+	/**
+	 * Registers a student player and starts a new game.
+	 *
+	 * The AI places its own fleet randomly (via Fleet.createRandom()).
+	 * The student's fleet is unknown to us — we will discover it shot by shot.
+	 *
+	 * @param request  { playerName, callbackUrl }
+	 * @return         { gameId, status, shotsPerTurn, message }
+	 */
+	@PostMapping(&quot;/register&quot;)
+	public ResponseEntity&lt;?&gt; register(@RequestBody RegistrationRequest request) {
+
+		// Basic validation
+<span class="nc bnc" id="L51" title="All 4 branches missed.">		if (request.playerName == null || request.playerName.isBlank()) {</span>
+<span class="nc" id="L52">			return error(HttpStatus.BAD_REQUEST, &quot;playerName is required&quot;);</span>
+		}
+<span class="nc bnc" id="L54" title="All 4 branches missed.">		if (request.callbackUrl == null || request.callbackUrl.isBlank()) {</span>
+<span class="nc" id="L55">			return error(HttpStatus.BAD_REQUEST, &quot;callbackUrl is required&quot;);</span>
+		}
+
+		// Create session — AI fleet is randomised inside GameSession constructor
+<span class="nc" id="L59">		GameSession session = registry.createSession(request.playerName, request.callbackUrl);</span>
+
+<span class="nc" id="L61">		RegistrationResponse response = new RegistrationResponse();</span>
+<span class="nc" id="L62">		response.gameId       = session.getGameId();</span>
+<span class="nc" id="L63">		response.status       = &quot;REGISTERED&quot;;</span>
+<span class="nc" id="L64">		response.shotsPerTurn = session.getShotsPerTurn();</span>
+<span class="nc" id="L65">		response.message      = &quot;Welcome, &quot; + request.playerName + &quot;! Game ready. You shoot first.&quot;;</span>
+
+<span class="nc" id="L67">		System.out.printf(&quot;[%s] Registered player '%s' (callback: %s)%n&quot;,</span>
+<span class="nc" id="L68">				session.getGameId(), request.playerName, request.callbackUrl);</span>
+
+<span class="nc" id="L70">		return ResponseEntity.ok(response);</span>
+	}
+
+	// =========================================================================
+	// m1a + m1b — POST /game/{gameId}/shots
+	// =========================================================================
+
+	/**
+	 * Receives the student's shots (m1a), evaluates them against the AI's fleet,
+	 * then — if the game is not over — triggers the AI's own shots via the
+	 * student's callback URL (m2a/m2b) within the same HTTP round-trip.
+	 *
+	 * Returns the results of the STUDENT's shots only (m1b).
+	 * The AI's shots are communicated via the callback.
+	 *
+	 * @param gameId   path variable — the UUID from /register
+	 * @param request  { shots: [ {row, column}, ... ] }
+	 * @return         { results, shipsRemaining, gameStatus, winner }
+	 */
+	@PostMapping(&quot;/game/{gameId}/shots&quot;)
+	public ResponseEntity&lt;?&gt; receiveShots(@PathVariable String gameId,
+										  @RequestBody ShotRequest request) {
+
+		// ── 1. Lookup session ────────────────────────────────────────────────
+<span class="nc" id="L94">		GameSession session = registry.getSession(gameId);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (session == null) {</span>
+<span class="nc" id="L96">			return error(HttpStatus.NOT_FOUND, &quot;Game not found: &quot; + gameId);</span>
+		}
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (session.isGameOver()) {</span>
+<span class="nc" id="L99">			return error(HttpStatus.GONE, &quot;Game &quot; + gameId + &quot; is already over. Winner: &quot; + session.getWinner());</span>
+		}
+
+		// ── 2. Validate incoming shots ───────────────────────────────────────
+<span class="nc bnc" id="L103" title="All 4 branches missed.">		if (request.shots == null || request.shots.size() != Game.NUMBER_SHOTS) {</span>
+<span class="nc" id="L104">			return error(HttpStatus.BAD_REQUEST,</span>
+					&quot;Exactly &quot; + Game.NUMBER_SHOTS + &quot; shots required per turn&quot;);
+		}
+
+		// ── 3. Convert DTO positions → IPosition list ────────────────────────
+<span class="nc" id="L109">		List&lt;IPosition&gt; positions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		for (ShotPosition sp : request.shots) {</span>
+<span class="nc bnc" id="L111" title="All 8 branches missed.">			if (sp.row == null || sp.row.isBlank() || sp.column &lt; 1 || sp.column &gt; 10) {</span>
+<span class="nc" id="L112">				return error(HttpStatus.BAD_REQUEST,</span>
+						&quot;Invalid position: row='&quot; + sp.row + &quot;' column=&quot; + sp.column);
+			}
+<span class="nc" id="L115">			positions.add(new Position(sp.row.toUpperCase().charAt(0), sp.column));</span>
+<span class="nc" id="L116">		}</span>
+
+		// ── 4. Fire student's shots at the AI's fleet (m1b logic) ────────────
+<span class="nc" id="L119">		IGame game = session.getGame();</span>
+<span class="nc" id="L120">		ShotResponse m1bResponse = evaluateShots(positions, game, session);</span>
+
+		// ── 5. Check if student won (all AI ships sunk) ──────────────────────
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (game.getRemainingShips() == 0) {</span>
+<span class="nc" id="L124">			session.markStudentWins();</span>
+<span class="nc" id="L125">			m1bResponse.gameStatus = &quot;GAME_OVER&quot;;</span>
+<span class="nc" id="L126">			m1bResponse.winner     = &quot;STUDENT_WINS&quot;;</span>
+<span class="nc" id="L127">			System.out.printf(&quot;[%s] GAME OVER — student '%s' wins!%n&quot;,</span>
+<span class="nc" id="L128">					gameId, session.getPlayerName());</span>
+<span class="nc" id="L129">			return ResponseEntity.ok(m1bResponse);</span>
+		}
+
+		// ── 6. AI fires back — calls student's callback (m2a + m2b) ─────────
+<span class="nc" id="L133">		List&lt;IPosition&gt; aiShots = aiStrategy.computeShots(game);</span>
+<span class="nc" id="L134">		boolean callbackOk = callbackClient.sendShots(session, aiShots);</span>
+
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (!callbackOk) {</span>
+			// Callback failed — warn but don't crash the student's turn
+<span class="nc" id="L138">			System.err.printf(&quot;[%s] WARNING: callback to '%s' failed. AI shots skipped.%n&quot;,</span>
+<span class="nc" id="L139">					gameId, session.getCallbackUrl());</span>
+		}
+
+		// ── 7. Return m1b to student ─────────────────────────────────────────
+<span class="nc" id="L143">		return ResponseEntity.ok(m1bResponse);</span>
+	}
+
+	// =========================================================================
+	// Helpers
+	// =========================================================================
+
+	/**
+	 * Fires each position against the AI's fleet and builds the ShotResponse (m1b).
+	 * Delegates to the existing Game.fireSingleShot() so all existing logic is reused.
+	 */
+	private ShotResponse evaluateShots(List&lt;IPosition&gt; positions,
+									   IGame game,
+									   GameSession session) {
+<span class="nc" id="L157">		List&lt;ShotResult&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L158">		List&lt;IPosition&gt; alreadyThisTurn = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		for (IPosition pos : positions) {</span>
+<span class="nc" id="L161">			boolean repeatedInTurn = alreadyThisTurn.contains(pos);</span>
+<span class="nc" id="L162">			IGame.ShotResult sr = game.fireSingleShot(pos, repeatedInTurn);</span>
+<span class="nc" id="L163">			alreadyThisTurn.add(pos);</span>
+
+<span class="nc" id="L165">			ShotResult dto  = new ShotResult();</span>
+<span class="nc" id="L166">			dto.row         = String.valueOf(pos.getClassicRow());</span>
+<span class="nc" id="L167">			dto.column      = pos.getClassicColumn();</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			if (!sr.valid()) {</span>
+<span class="nc" id="L170">				dto.outcome = &quot;INVALID&quot;;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			} else if (sr.repeated()) {</span>
+<span class="nc" id="L172">				dto.outcome = &quot;REPEATED&quot;;</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			} else if (sr.ship() == null) {</span>
+<span class="nc" id="L174">				dto.outcome = &quot;MISS&quot;;</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			} else if (sr.sunk()) {</span>
+<span class="nc" id="L176">				dto.outcome  = &quot;SUNK&quot;;</span>
+<span class="nc" id="L177">				dto.shipType = sr.ship().getCategory();</span>
+			} else {
+<span class="nc" id="L179">				dto.outcome  = &quot;HIT&quot;;</span>
+<span class="nc" id="L180">				dto.shipType = sr.ship().getCategory();</span>
+			}
+<span class="nc" id="L182">			results.add(dto);</span>
+<span class="nc" id="L183">		}</span>
+
+<span class="nc" id="L185">		ShotResponse response  = new ShotResponse();</span>
+<span class="nc" id="L186">		response.results       = results;</span>
+<span class="nc" id="L187">		response.shipsRemaining = game.getRemainingShips();</span>
+<span class="nc" id="L188">		response.gameStatus    = &quot;ONGOING&quot;;</span>
+<span class="nc" id="L189">		response.winner        = null;</span>
+<span class="nc" id="L190">		return response;</span>
+	}
+
+	/** Convenience helper to build a JSON error response. */
+	private ResponseEntity&lt;ErrorResponse&gt; error(HttpStatus status, String message) {
+<span class="nc" id="L195">		return ResponseEntity.status(status).body(new ErrorResponse(message));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

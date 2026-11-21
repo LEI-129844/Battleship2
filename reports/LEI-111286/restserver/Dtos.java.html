@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Dtos.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BattleshipGame</a> &gt; <a href="index.source.html" class="el_package">restserver</a> &gt; <span class="el_source">Dtos.java</span></div><h1>Dtos.java</h1><pre class="source lang-java linenums">package restserver;
+
+import java.util.List;
+
+/**
+ * Data Transfer Objects (DTOs) for the Battleship REST protocol.
+ *
+ * These are plain Java classes (POJOs). Spring Boot + Jackson automatically
+ * serialises them to/from JSON — no extra annotations needed for basic use.
+ *
+ * Kept in a single file so students have one place to read the full contract.
+ */
+<span class="nc" id="L13">public class Dtos {</span>
+
+	// =========================================================================
+	// m0 — Registration
+	// =========================================================================
+
+	/**
+	 * m0 REQUEST  →  POST /register
+	 *
+	 * Example JSON:
+	 * {
+	 *   &quot;playerName&quot;: &quot;Alice&quot;,
+	 *   &quot;callbackUrl&quot;: &quot;http://student-host:9090&quot;
+	 * }
+	 */
+<span class="fc" id="L28">	public static class RegistrationRequest {</span>
+		public String playerName;
+		public String callbackUrl;
+	}
+
+	/**
+	 * m0 RESPONSE  ←  200 OK
+	 *
+	 * Example JSON:
+	 * {
+	 *   &quot;gameId&quot;:      &quot;550e8400-e29b-41d4-a716-446655440000&quot;,
+	 *   &quot;status&quot;:      &quot;REGISTERED&quot;,
+	 *   &quot;shotsPerTurn&quot;: 3,
+	 *   &quot;message&quot;:     &quot;Game ready. You shoot first.&quot;
+	 * }
+	 */
+<span class="fc" id="L44">	public static class RegistrationResponse {</span>
+		public String gameId;
+		public String status;
+		public int    shotsPerTurn;
+		public String message;
+	}
+
+	// =========================================================================
+	// m1a / m2a — Shot list  (same structure in both directions)
+	// =========================================================================
+
+	/**
+	 * m1a REQUEST  →  POST /game/{gameId}/shots      (student → AI)
+	 * m2a REQUEST  →  POST {callbackUrl}/game/{gameId}/shots  (AI → student)
+	 *
+	 * Each position uses the classic notation: row = &quot;A&quot;..&quot;J&quot;, column = 1..10
+	 *
+	 * Example JSON:
+	 * {
+	 *   &quot;shots&quot;: [
+	 *     { &quot;row&quot;: &quot;B&quot;, &quot;column&quot;: 3 },
+	 *     { &quot;row&quot;: &quot;G&quot;, &quot;column&quot;: 7 },
+	 *     { &quot;row&quot;: &quot;D&quot;, &quot;column&quot;: 10 }
+	 *   ]
+	 * }
+	 */
+<span class="fc" id="L70">	public static class ShotRequest {</span>
+		public List&lt;ShotPosition&gt; shots;
+	}
+
+	/** A single position in classic notation. */
+<span class="fc" id="L75">	public static class ShotPosition {</span>
+		public String row;     // &quot;A&quot; .. &quot;J&quot;
+		public int    column;  // 1  .. 10
+	}
+
+	// =========================================================================
+	// m1b / m2b — Cumulative shot results  (same structure in both directions)
+	// =========================================================================
+
+	/**
+	 * m1b RESPONSE  ←  200 OK  (AI → student, result of student's shots)
+	 * m2b RESPONSE  ←  200 OK  (student → AI, result of AI's shots)
+	 *
+	 * Example JSON:
+	 * {
+	 *   &quot;results&quot;: [
+	 *     { &quot;row&quot;: &quot;B&quot;, &quot;column&quot;: 3,  &quot;outcome&quot;: &quot;MISS&quot; },
+	 *     { &quot;row&quot;: &quot;G&quot;, &quot;column&quot;: 7,  &quot;outcome&quot;: &quot;HIT&quot;,  &quot;shipType&quot;: &quot;caravela&quot; },
+	 *     { &quot;row&quot;: &quot;D&quot;, &quot;column&quot;: 10, &quot;outcome&quot;: &quot;SUNK&quot;, &quot;shipType&quot;: &quot;galeao&quot;   }
+	 *   ],
+	 *   &quot;shipsRemaining&quot;: 8,
+	 *   &quot;gameStatus&quot;: &quot;ONGOING&quot;
+	 * }
+	 *
+	 * gameStatus values: &quot;ONGOING&quot; | &quot;GAME_OVER&quot;
+	 * outcome values:    &quot;MISS&quot;    | &quot;HIT&quot; | &quot;SUNK&quot; | &quot;REPEATED&quot; | &quot;INVALID&quot;
+	 */
+<span class="fc" id="L102">	public static class ShotResponse {</span>
+		public List&lt;ShotResult&gt; results;
+		public int    shipsRemaining;
+		public String gameStatus;
+		public String winner;          // null when ONGOING; &quot;AI_WINS&quot; or &quot;STUDENT_WINS&quot; when GAME_OVER
+	}
+
+	/** Result for one individual shot. */
+<span class="fc" id="L110">	public static class ShotResult {</span>
+		public String row;
+		public int    column;
+		public String outcome;   // &quot;MISS&quot; | &quot;HIT&quot; | &quot;SUNK&quot; | &quot;REPEATED&quot; | &quot;INVALID&quot;
+		public String shipType;  // null unless outcome is HIT or SUNK
+	}
+
+	// =========================================================================
+	// Error response
+	// =========================================================================
+
+	/**
+	 * Returned with HTTP 4xx when something goes wrong.
+	 *
+	 * Example JSON:
+	 * { &quot;error&quot;: &quot;Game not found: abc-123&quot; }
+	 */
+	public static class ErrorResponse {
+		public String error;
+<span class="fc" id="L129">		public ErrorResponse(String error) { this.error = error; }</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
