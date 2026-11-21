@@ -224,8 +224,11 @@ public abstract class Ship implements IShip
     public boolean stillFloating()
     {
 	for (int i = 0; i < getSize(); i++)
-	    if (!getPositions().get(i).isHit())
+	{
+		IPosition position = getPositions().get(i);
+	    if (!position.isHit())
 			return true;
+	}
 	return false;
     }
 
