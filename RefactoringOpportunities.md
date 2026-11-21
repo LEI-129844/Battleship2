@@ -14,3 +14,4 @@
 | `Tasks::readClassicPosition` | Condicional complexo com dois formatos de entrada | Decompose Conditional | 111286 |
 | `restserver.Dtos::RegistrationRequest` | Dados expostos diretamente através de campos públicos | Encapsulate Field | 111286 |
 | `Ship::stillFloating` | Obtenção repetida da mesma posição dentro do ciclo | Introduce Variable | 111286 |
+| `MoveDatabase::saveShots` | Nome do método não descreve que executa uma operação JDBC completa | Rename | 111286 |

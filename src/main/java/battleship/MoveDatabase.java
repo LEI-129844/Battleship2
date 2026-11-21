@@ -76,7 +76,7 @@ public final class MoveDatabase {
         try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
             try {
-                saveShots(connection, sql, gameId, move, shots, results);
+                executeSaveShots(connection, sql, gameId, move, shots, results);
                 connection.commit();
             } catch (SQLException exception) {
                 connection.rollback();
@@ -87,7 +87,7 @@ public final class MoveDatabase {
         }
     }
 
-    private void saveShots(Connection connection, String sql, long gameId, IMove move,
+    private void executeSaveShots(Connection connection, String sql, long gameId, IMove move,
                            List<IPosition> shots, List<IGame.ShotResult> results) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             for (int index = 0; index < shots.size(); index++) {
