@@ -11,7 +11,8 @@ import java.util.List;
 
 public class ScoreboardManager {
     private static final String FILE_PATH = "scoreboard.json";
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Type LIST_TYPE = new TypeToken<ArrayList<ScoreEntry>>() {}.getType();
 
     public static List<ScoreEntry> carregarScores() {
         File file = new File(FILE_PATH);
@@ -19,8 +20,7 @@ public class ScoreboardManager {
             return new ArrayList<>();
         }
         try (Reader reader = new FileReader(file)) {
-            Type listType = new TypeToken<ArrayList<ScoreEntry>>() {}.getType();
-            List<ScoreEntry> scores = gson.fromJson(reader, listType);
+            List<ScoreEntry> scores = GSON.fromJson(reader, LIST_TYPE);
             return scores != null ? scores : new ArrayList<>();
         } catch (IOException e) {
             System.err.println("Erro ao carregar scoreboard: " + e.getMessage());
@@ -33,7 +33,7 @@ public class ScoreboardManager {
         scores.add(new ScoreEntry(totalTiros, naviosAfundados, vitoria));
 
         try (Writer writer = new FileWriter(FILE_PATH)) {
-            gson.toJson(scores, writer);
+            GSON.toJson(scores, writer);
             System.out.println("Partida guardada com sucesso no ficheiro 'scoreboard.json'!");
         } catch (IOException e) {
             System.err.println("Erro ao gravar no scoreboard: " + e.getMessage());
