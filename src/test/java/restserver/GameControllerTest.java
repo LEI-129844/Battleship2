@@ -24,9 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * subclasses falsas (FakeCallbackClient, FakeAiStrategy) que registam como foram chamadas.
  * O GameRegistry e o GameSession são os verdadeiros. O jogo da IA tem uma frota aleatória, por isso
  * os testes descobrem onde estão os navios em vez de assumir posições fixas.
- *
- * Nos testes de validação o controlador é criado com null nos colaboradores, porque esses
- * caminhos terminam antes de os usar.
  */
 public class GameControllerTest {
 
