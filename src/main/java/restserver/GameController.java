@@ -119,7 +119,7 @@ public class GameController {
 
 		// ── 4. Fire student's shots at the AI's fleet (m1b logic) ────────────
 		IGame game = session.getGame();
-		ShotResponse m1bResponse = evaluateShots(positions, game, session);
+		ShotResponse m1bResponse = evaluateShots(positions, game);
 
 		// ── 5. Check if student won (all AI ships sunk) ──────────────────────
 		if (game.getRemainingShips() == 0) {
@@ -158,8 +158,7 @@ public class GameController {
 	 * Delegates to the existing Game.fireSingleShot() so all existing logic is reused.
 	 */
 	private ShotResponse evaluateShots(List<IPosition> positions,
-									   IGame game,
-									   GameSession session) {
+									   IGame game) {
 		List<ShotResult> results = new ArrayList<>();
 		List<IPosition> alreadyThisTurn = new ArrayList<>();
 
