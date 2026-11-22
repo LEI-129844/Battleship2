@@ -176,14 +176,17 @@ public class GameController {
 				dto.outcome = "INVALID";
 			} else if (sr.repeated()) {
 				dto.outcome = "REPEATED";
-			} else if (sr.ship() == null) {
-				dto.outcome = "MISS";
-			} else if (sr.sunk()) {
-				dto.outcome  = "SUNK";
-				dto.shipType = sr.ship().getCategory();
 			} else {
-				dto.outcome  = "HIT";
-				dto.shipType = sr.ship().getCategory();
+				IShip ship = sr.ship();
+				if (ship == null) {
+					dto.outcome = "MISS";
+				} else if (sr.sunk()) {
+					dto.outcome  = "SUNK";
+					dto.shipType = ship.getCategory();
+				} else {
+					dto.outcome  = "HIT";
+					dto.shipType = ship.getCategory();
+				}
 			}
 			results.add(dto);
 		}
