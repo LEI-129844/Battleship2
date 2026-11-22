@@ -304,7 +304,7 @@ import java.util.ArrayList;
 		void testPrintShips1() {
 			IShip barca = new Barge(Compass.NORTH, new Position(1, 1));
 			IShip caravela = new Caravel(Compass.NORTH, new Position(4, 4));
-			String saida = capturarSaida(() -> fleet.printShips(List.of(barca, caravela)));
+			String saida = capturarSaida(() -> Fleet.printShips(List.of(barca, caravela)));
 			assertAll("Navios impressos",
 					() -> assertTrue(saida.contains(barca.toString()), "Error: expected the barge in the output but got '" + saida + "'"),
 					() -> assertTrue(saida.contains(caravela.toString()), "Error: expected the caravel in the output but got '" + saida + "'"));
@@ -313,14 +313,14 @@ import java.util.ArrayList;
 		@Test
 		@DisplayName("printShips com lista vazia não escreve nada")
 		void testPrintShips2() {
-			String saida = capturarSaida(() -> fleet.printShips(new ArrayList<>()));
+			String saida = capturarSaida(() -> Fleet.printShips(new ArrayList<>()));
 			assertEquals("", saida, "Error: expected no output for an empty list but got '" + saida + "'");
 		}
 
 		@Test
 		@DisplayName("printShips com lista null falha a asserção (AssertionError)")
 		void testPrintShips3() {
-			assertThrows(AssertionError.class, () -> fleet.printShips(null),
+			assertThrows(AssertionError.class, () -> Fleet.printShips(null),
 					"Error: expected an AssertionError for a null list but none was thrown");
 		}
 

@@ -3,3 +3,12 @@
 
 # Artefactos gerados pelo Maven e pelos testes
 /target/
+.idea/misc.xml
+.idea/misc.xml
+target/classes/battleship/Fleet.class
+target/classes/battleship/Game.class
+target/classes/battleship/Tasks.class
+target/classes/battleship/Move.class
+target/classes/battleship/Fleet.class
+target/classes/restserver/CallbackClient.class
+target/classes/restserver/GameController.class

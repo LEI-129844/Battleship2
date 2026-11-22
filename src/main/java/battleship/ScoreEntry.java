@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class ScoreEntry {
+    private static final String FORMATO_DATA = "yyyy-MM-dd HH:mm:ss";
     private String data;
     private int totalTiros;
     private int naviosAfundados;
@@ -12,7 +13,7 @@ public class ScoreEntry {
     public ScoreEntry() {}
 
     public ScoreEntry(int totalTiros, int naviosAfundados, boolean vitoria) {
-        this.data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        this.data = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FORMATO_DATA));
         this.totalTiros = totalTiros;
         this.naviosAfundados = naviosAfundados;
         this.vitoria = vitoria;

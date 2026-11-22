@@ -19,6 +19,8 @@ import java.util.List;
 @RestController
 public class GameController {
 
+	private static final int MAX_COLUMN = 10;
+	private static final int MIN_COLUMN = 1;
 	private final GameRegistry registry;
 	private final CallbackClient callbackClient;
 	private final AiShotStrategy aiStrategy;
@@ -108,7 +110,7 @@ public class GameController {
 		// ── 3. Convert DTO positions → IPosition list ────────────────────────
 		List<IPosition> positions = new ArrayList<>();
 		for (ShotPosition sp : request.shots) {
-			if (sp.row == null || sp.row.isBlank() || sp.column < 1 || sp.column > 10) {
+			if (isInvalidPosition(sp)) {
 				return error(HttpStatus.BAD_REQUEST,
 						"Invalid position: row='" + sp.row + "' column=" + sp.column);
 			}
@@ -117,7 +119,7 @@ public class GameController {
 
 		// ── 4. Fire student's shots at the AI's fleet (m1b logic) ────────────
 		IGame game = session.getGame();
-		ShotResponse m1bResponse = evaluateShots(positions, game, session);
+		ShotResponse m1bResponse = evaluateShots(positions, game);
 
 		// ── 5. Check if student won (all AI ships sunk) ──────────────────────
 		if (game.getRemainingShips() == 0) {
@@ -143,6 +145,10 @@ public class GameController {
 		return ResponseEntity.ok(m1bResponse);
 	}
 
+	private static boolean isInvalidPosition(ShotPosition sp) {
+		return sp.row == null || sp.row.isBlank() || sp.column < MIN_COLUMN || sp.column > MAX_COLUMN;
+	}
+
 	// =========================================================================
 	// Helpers
 	// =========================================================================
@@ -152,8 +158,7 @@ public class GameController {
 	 * Delegates to the existing Game.fireSingleShot() so all existing logic is reused.
 	 */
 	private ShotResponse evaluateShots(List<IPosition> positions,
-									   IGame game,
-									   GameSession session) {
+									   IGame game) {
 		List<ShotResult> results = new ArrayList<>();
 		List<IPosition> alreadyThisTurn = new ArrayList<>();
 
@@ -170,14 +175,17 @@ public class GameController {
 				dto.outcome = "INVALID";
 			} else if (sr.repeated()) {
 				dto.outcome = "REPEATED";
-			} else if (sr.ship() == null) {
-				dto.outcome = "MISS";
-			} else if (sr.sunk()) {
-				dto.outcome  = "SUNK";
-				dto.shipType = sr.ship().getCategory();
 			} else {
-				dto.outcome  = "HIT";
-				dto.shipType = sr.ship().getCategory();
+				IShip ship = sr.ship();
+				if (ship == null) {
+					dto.outcome = "MISS";
+				} else if (sr.sunk()) {
+					dto.outcome  = "SUNK";
+					dto.shipType = ship.getCategory();
+				} else {
+					dto.outcome  = "HIT";
+					dto.shipType = ship.getCategory();
+				}
 			}
 			results.add(dto);
 		}

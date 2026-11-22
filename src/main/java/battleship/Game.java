@@ -9,6 +9,9 @@ import java.util.*;
 
 public class Game implements IGame
 {
+
+    private static final String BORDER = "+--------------------------------------------------------------+";
+
     /**
      * Prints the game board by representing the positions of ships, adjacent tiles,
      * shots, and other game elements onto the console. The method also optionally
@@ -295,19 +298,7 @@ public class Game implements IGame
             // Lê a próxima parte e constrói uma posição
             String token = inputScanner.next();
 
-            if (token.matches("[A-Za-z]")) {
-                // Caso seja somente uma coluna ("A", "B", etc.), esperar o próximo número
-                if (inputScanner.hasNextInt()) {
-                    int row = inputScanner.nextInt();
-                    shots.add(new Position(token.toUpperCase().charAt(0), row));
-                } else {
-                    throw new IllegalArgumentException("Posição incompleta! A coluna '" + token + "' não é seguida por uma linha.");
-                }
-            } else {
-                // Caso o token já contenha a coluna e a linha juntas (ex.: "A3")
-                Scanner singleScanner = new Scanner(token);
-                shots.add(Tasks.readClassicPosition(singleScanner));
-            }
+            parsePosition(token, inputScanner, shots);
         }
 
         if (shots.size() != NUMBER_SHOTS) {
@@ -317,6 +308,22 @@ public class Game implements IGame
         this.fireShots(shots);
 
         return Game.jsonShots(shots);
+    }
+
+    private static void parsePosition(String token, Scanner inputScanner, List<IPosition> shots) {
+        if (token.matches("[A-Za-z]")) {
+            // Caso seja somente uma coluna ("A", "B", etc.), esperar o próximo número
+            if (inputScanner.hasNextInt()) {
+                int row = inputScanner.nextInt();
+                shots.add(new Position(token.toUpperCase().charAt(0), row));
+            } else {
+                throw new IllegalArgumentException("Posição incompleta! A coluna '" + token + "' não é seguida por uma linha.");
+            }
+        } else {
+            // Caso o token já contenha a coluna e a linha juntas (ex.: "A3")
+            Scanner singleScanner = new Scanner(token);
+            shots.add(Tasks.readClassicPosition(singleScanner));
+        }
     }
 
     /**
@@ -422,8 +429,7 @@ public class Game implements IGame
     @Override
     public int getRemainingShips()
     {
-        List<IShip> floatingShips = myFleet.getFloatingShips();
-        return floatingShips.size();
+        return myFleet.getFloatingShips().size();
     }
 
     public boolean repeatedShot(IPosition pos)
@@ -448,9 +454,9 @@ public class Game implements IGame
 
     public void over() {
         System.out.println();
-        System.out.println("+--------------------------------------------------------------+");
+        System.out.println(BORDER);
         System.out.println("| Maldito sejas, Java Sparrow, eu voltarei, glub glub glub ... |");
-        System.out.println("+--------------------------------------------------------------+");
+        System.out.println(BORDER);
 
         // Gravação automática das estatísticas no Scoreboard JSON
         int totalTiros = this.alienMoves.size() * NUMBER_SHOTS;

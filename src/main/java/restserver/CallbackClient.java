@@ -56,7 +56,6 @@ public class CallbackClient {
 			dto.shots.add(sp);
 		}
 
-		String url  = session.getCallbackUrl() + "/game/" + session.getGameId() + "/shots";
 		String body;
 		try {
 			body = mapper.writeValueAsString(dto);
@@ -67,7 +66,7 @@ public class CallbackClient {
 
 		// ── 2. POST to student's server ──────────────────────────────────────
 		HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create(url))
+				.uri(URI.create(session.getCallbackUrl() + "/game/" + session.getGameId() + "/shots"))
 				.header("Content-Type", "application/json")
 				.timeout(Duration.ofSeconds(10))
 				.POST(HttpRequest.BodyPublishers.ofString(body))
@@ -81,9 +80,10 @@ public class CallbackClient {
 			return false;
 		}
 
-		if (response.statusCode() < 200 || response.statusCode() >= 300) {
+		int status = response.statusCode();
+		if (status < 200 || status >= 300) {
 			System.err.printf("[Callback] Student returned HTTP %d: %s%n",
-					response.statusCode(), response.body());
+					status, response.body());
 			return false;
 		}
 

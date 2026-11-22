@@ -15,3 +15,10 @@
 | `restserver.Dtos::RegistrationRequest` | Dados expostos diretamente através de campos públicos | Encapsulate Field | 111286 |
 | `Ship::stillFloating` | Obtenção repetida da mesma posição dentro do ciclo | Introduce Variable | 111286 |
 | `MoveDatabase::saveShots` | Nome do método não descreve que executa uma operação JDBC completa | Rename | 111286 |
+| `restserver.GameController::receiveShots` | Long Method (condição de validação comprida) | Extract Method | 129844 |
+| `restserver.GameController::receiveShots` | Magic Number (1 e 10) | Introduce Constant | 129844 |
+| `restserver.GameController::evaluateShots` | Expressão repetida (sr.ship()) | Introduce Variable | 129844 |
+| `restserver.GameController::evaluateShots` | Unused Parameter (session) | Safe Delete | 129844 |
+| `battleship.Game::over` | Magic String / Duplicated Code (moldura) | Introduce Constant | 129844 |
+| `battleship.Game::readEnemyFire` | Long Method | Extract Method | 129844 |
+| `battleship.Game::getRemainingShips` | Variável temporária desnecessária | Inline Variable | 129844 |
