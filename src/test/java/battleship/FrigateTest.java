@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * - getLeftMostPos: 2
  * - getRightMostPos: 2
  */
+@DisplayName("Testes da classe Frigate")
 public class FrigateTest {
 
 	private Frigate frigate;

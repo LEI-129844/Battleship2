@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AiShotStrategy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BattleshipGame</a> &gt; <a href="index.source.html" class="el_package">restserver</a> &gt; <span class="el_source">AiShotStrategy.java</span></div><h1>AiShotStrategy.java</h1><pre class="source lang-java linenums">package restserver;
+
+import battleship.*;
+import org.springframework.stereotype.Component;
+
+import java.util.*;
+
+/**
+ * AI shooting strategy using a Hunt and Target approach.
+ *
+ * Phase 1 — HUNT:   fire at a checkerboard pattern of cells not yet tried.
+ * Phase 2 — TARGET: when a HIT is recorded, attack adjacent cells until the
+ *                   ship is SUNK, then revert to HUNT.
+ *
+ * This is intentionally simple so students can understand and beat it.
+ * You can make it harder by replacing the checkerboard hunt with a
+ * probability-density map, or easier by using purely random shots.
+ */
+@Component
+<span class="nc" id="L20">public class AiShotStrategy {</span>
+
+	/**
+	 * Compute the next set of AI shots based on current game knowledge.
+	 *
+	 * The game object holds alienMoves (AI's previous shots) which we inspect
+	 * to avoid repeating positions and to identify hit-but-not-sunk cells.
+	 *
+	 * @param game  the current game (used to read past moves and fleet state)
+	 * @return      a list of exactly Game.NUMBER_SHOTS positions
+	 */
+	public List&lt;IPosition&gt; computeShots(IGame game) {
+
+		// Build set of all positions already shot by the AI
+<span class="nc" id="L34">		Set&lt;IPosition&gt; alreadyShot = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">		for (IMove move : game.getAlienMoves()) {</span>
+<span class="nc" id="L36">			alreadyShot.addAll(move.getShots());</span>
+<span class="nc" id="L37">		}</span>
+
+		// Collect hit-but-not-sunk positions (TARGET phase candidates)
+<span class="nc" id="L40">		List&lt;IPosition&gt; hitTargets = getHitButNotSunkPositions(game, alreadyShot);</span>
+
+<span class="nc" id="L42">		List&lt;IPosition&gt; chosen = new ArrayList&lt;&gt;();</span>
+
+		// ── Phase 2 TARGET: prioritise neighbours of existing hits ──────────
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		if (!hitTargets.isEmpty()) {</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">			for (IPosition hit : hitTargets) {</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">				if (chosen.size() &gt;= Game.NUMBER_SHOTS) break;</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">				for (IPosition neighbour : hit.adjacentPositions()) {</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">					if (chosen.size() &gt;= Game.NUMBER_SHOTS) break;</span>
+<span class="nc bnc" id="L50" title="All 4 branches missed.">					if (!alreadyShot.contains(neighbour) &amp;&amp; !chosen.contains(neighbour)) {</span>
+<span class="nc" id="L51">						chosen.add(neighbour);</span>
+					}
+<span class="nc" id="L53">				}</span>
+<span class="nc" id="L54">			}</span>
+		}
+
+		// ── Phase 1 HUNT: fill remaining slots from checkerboard pattern ────
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (chosen.size() &lt; Game.NUMBER_SHOTS) {</span>
+<span class="nc" id="L59">			List&lt;IPosition&gt; huntPool = buildHuntPool(alreadyShot, chosen);</span>
+<span class="nc" id="L60">			Collections.shuffle(huntPool, new Random(System.currentTimeMillis()));</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			for (IPosition p : huntPool) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">				if (chosen.size() &gt;= Game.NUMBER_SHOTS) break;</span>
+<span class="nc" id="L63">				chosen.add(p);</span>
+<span class="nc" id="L64">			}</span>
+		}
+
+		// Safety fallback: if still not enough shots, pick any unseen cell
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (chosen.size() &lt; Game.NUMBER_SHOTS) {</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">			for (int r = 0; r &lt; Game.BOARD_SIZE &amp;&amp; chosen.size() &lt; Game.NUMBER_SHOTS; r++) {</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">				for (int c = 0; c &lt; Game.BOARD_SIZE &amp;&amp; chosen.size() &lt; Game.NUMBER_SHOTS; c++) {</span>
+<span class="nc" id="L71">					IPosition p = new Position(r, c);</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">					if (!alreadyShot.contains(p) &amp;&amp; !chosen.contains(p)) {</span>
+<span class="nc" id="L73">						chosen.add(p);</span>
+					}
+				}
+			}
+		}
+
+<span class="nc" id="L79">		System.out.print(&quot;[AI] Firing: &quot;);</span>
+<span class="nc" id="L80">		chosen.forEach(p -&gt; System.out.print(p + &quot; &quot;));</span>
+<span class="nc" id="L81">		System.out.println();</span>
+
+<span class="nc" id="L83">		return chosen;</span>
+	}
+
+	// ── Private helpers ───────────────────────────────────────────────────────
+
+	/**
+	 * Returns positions the AI has HIT in a previous move but the ship is not yet sunk.
+	 * We detect &quot;sunk&quot; by looking at whether all adjacent positions of a hit cluster
+	 * have also been hit — in the absence of a direct reference to the student's fleet,
+	 * we use a simple heuristic: a position is a &quot;live target&quot; if it was hit and at
+	 * least one of its orthogonal neighbours has NOT been shot yet.
+	 */
+	private List&lt;IPosition&gt; getHitButNotSunkPositions(IGame game, Set&lt;IPosition&gt; alreadyShot) {
+
+		// Gather all positions the AI hit
+<span class="nc" id="L98">		List&lt;IPosition&gt; hits = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		for (IMove move : game.getAlienMoves()) {</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			for (int i = 0; i &lt; move.getShots().size(); i++) {</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">				IGame.ShotResult result = move.getShotResults().isEmpty()</span>
+<span class="nc" id="L102">						? null</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">						: (i &lt; move.getShotResults().size() ? move.getShotResults().get(i) : null);</span>
+
+				// If we have result metadata, use it precisely
+<span class="nc bnc" id="L106" title="All 6 branches missed.">				if (result != null &amp;&amp; result.valid() &amp;&amp; !result.repeated()</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">						&amp;&amp; result.ship() != null &amp;&amp; !result.sunk()) {</span>
+<span class="nc" id="L108">					hits.add(move.getShots().get(i));</span>
+				}
+			}
+<span class="nc" id="L111">		}</span>
+<span class="nc" id="L112">		return hits;</span>
+	}
+
+	/**
+	 * Builds a checkerboard-patterned pool of candidate positions for the HUNT phase.
+	 * Using only cells where (row + col) % 2 == 0 means minimum ship size 2
+	 * (Barca) will always intersect at least one cell — halves the search space.
+	 */
+	private List&lt;IPosition&gt; buildHuntPool(Set&lt;IPosition&gt; alreadyShot, List&lt;IPosition&gt; alreadyChosen) {
+<span class="nc" id="L121">		List&lt;IPosition&gt; pool = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		for (int r = 0; r &lt; Game.BOARD_SIZE; r++) {</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			for (int c = 0; c &lt; Game.BOARD_SIZE; c++) {</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				if ((r + c) % 2 == 0) {</span>
+<span class="nc" id="L125">					IPosition p = new Position(r, c);</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">					if (!alreadyShot.contains(p) &amp;&amp; !alreadyChosen.contains(p)) {</span>
+<span class="nc" id="L127">						pool.add(p);</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L132">		return pool;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

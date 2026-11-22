@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CallbackClient.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BattleshipGame</a> &gt; <a href="index.source.html" class="el_package">restserver</a> &gt; <span class="el_source">CallbackClient.java</span></div><h1>CallbackClient.java</h1><pre class="source lang-java linenums">package restserver;
+
+import battleship.*;
+import restserver.Dtos.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.*;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Sends the AI's shots to the student's server (m2a) and reads back the results (m2b).
+ *
+ * Uses Java's built-in java.net.http.HttpClient (available since Java 11) —
+ * no extra dependency needed.
+ *
+ * The AI calls:  POST {callbackUrl}/game/{gameId}/shots
+ * with the same ShotRequest JSON format that the student sends to us.
+ *
+ * The student must respond with the same ShotResponse JSON format that we
+ * send back to them — this symmetric design keeps the student contract simple.
+ */
+@Component
+public class CallbackClient {
+
+	private final HttpClient   http;
+	private final ObjectMapper mapper;
+
+<span class="nc" id="L33">	public CallbackClient() {</span>
+<span class="nc" id="L34">		this.http   = HttpClient.newBuilder()</span>
+<span class="nc" id="L35">				.connectTimeout(Duration.ofSeconds(5))</span>
+<span class="nc" id="L36">				.build();</span>
+<span class="nc" id="L37">		this.mapper = new ObjectMapper();</span>
+<span class="nc" id="L38">	}</span>
+
+	/**
+	 * Fire AI shots at the student's callback URL and record the results in the game.
+	 *
+	 * @param session   the active game session (provides callbackUrl and gameId)
+	 * @param aiShots   the positions the AI wants to fire
+	 * @return true if the callback succeeded and results were processed; false on error
+	 */
+	public boolean sendShots(GameSession session, List&lt;IPosition&gt; aiShots) {
+
+		// ── 1. Build m2a request body ────────────────────────────────────────
+<span class="nc" id="L50">		ShotRequest dto = new ShotRequest();</span>
+<span class="nc" id="L51">		dto.shots = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		for (IPosition pos : aiShots) {</span>
+<span class="nc" id="L53">			ShotPosition sp = new ShotPosition();</span>
+<span class="nc" id="L54">			sp.row    = String.valueOf(pos.getClassicRow());</span>
+<span class="nc" id="L55">			sp.column = pos.getClassicColumn();</span>
+<span class="nc" id="L56">			dto.shots.add(sp);</span>
+<span class="nc" id="L57">		}</span>
+
+<span class="nc" id="L59">		String url  = session.getCallbackUrl() + &quot;/game/&quot; + session.getGameId() + &quot;/shots&quot;;</span>
+		String body;
+		try {
+<span class="nc" id="L62">			body = mapper.writeValueAsString(dto);</span>
+<span class="nc" id="L63">		} catch (IOException e) {</span>
+<span class="nc" id="L64">			System.err.println(&quot;[Callback] Failed to serialize AI shots: &quot; + e.getMessage());</span>
+<span class="nc" id="L65">			return false;</span>
+<span class="nc" id="L66">		}</span>
+
+		// ── 2. POST to student's server ──────────────────────────────────────
+<span class="nc" id="L69">		HttpRequest request = HttpRequest.newBuilder()</span>
+<span class="nc" id="L70">				.uri(URI.create(url))</span>
+<span class="nc" id="L71">				.header(&quot;Content-Type&quot;, &quot;application/json&quot;)</span>
+<span class="nc" id="L72">				.timeout(Duration.ofSeconds(10))</span>
+<span class="nc" id="L73">				.POST(HttpRequest.BodyPublishers.ofString(body))</span>
+<span class="nc" id="L74">				.build();</span>
+
+		HttpResponse&lt;String&gt; response;
+		try {
+<span class="nc" id="L78">			response = http.send(request, HttpResponse.BodyHandlers.ofString());</span>
+<span class="nc" id="L79">		} catch (IOException | InterruptedException e) {</span>
+<span class="nc" id="L80">			System.err.println(&quot;[Callback] HTTP call to student failed: &quot; + e.getMessage());</span>
+<span class="nc" id="L81">			return false;</span>
+<span class="nc" id="L82">		}</span>
+
+<span class="nc bnc" id="L84" title="All 4 branches missed.">		if (response.statusCode() &lt; 200 || response.statusCode() &gt;= 300) {</span>
+<span class="nc" id="L85">			System.err.printf(&quot;[Callback] Student returned HTTP %d: %s%n&quot;,</span>
+<span class="nc" id="L86">					response.statusCode(), response.body());</span>
+<span class="nc" id="L87">			return false;</span>
+		}
+
+		// ── 3. Parse m2b response ────────────────────────────────────────────
+		ShotResponse m2b;
+		try {
+<span class="nc" id="L93">			m2b = mapper.readValue(response.body(), ShotResponse.class);</span>
+<span class="nc" id="L94">		} catch (IOException e) {</span>
+<span class="nc" id="L95">			System.err.println(&quot;[Callback] Failed to parse student m2b response: &quot; + e.getMessage());</span>
+<span class="nc" id="L96">			return false;</span>
+<span class="nc" id="L97">		}</span>
+
+		// ── 4. Record the AI's move in the game (for strategy state tracking) ─
+<span class="nc" id="L100">		recordAiMove(session.getGame(), aiShots, m2b);</span>
+
+		// ── 5. Check if AI won ────────────────────────────────────────────────
+<span class="nc bnc" id="L103" title="All 4 branches missed.">		if (m2b.shipsRemaining == 0 || &quot;GAME_OVER&quot;.equals(m2b.gameStatus)) {</span>
+<span class="nc" id="L104">			session.markAiWins();</span>
+<span class="nc" id="L105">			System.out.printf(&quot;[%s] GAME OVER — AI wins against '%s'!%n&quot;,</span>
+<span class="nc" id="L106">					session.getGameId(), session.getPlayerName());</span>
+		}
+
+<span class="nc" id="L109">		return true;</span>
+	}
+
+	/**
+	 * Records the AI's shots and the student's reported results into the Game object.
+	 * This allows AiShotStrategy to see past hits when computing the next move.
+	 */
+	private void recordAiMove(IGame game, List&lt;IPosition&gt; shots, ShotResponse m2b) {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (m2b.results == null) return;</span>
+
+<span class="nc" id="L119">		List&lt;IGame.ShotResult&gt; shotResults = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L120" title="All 4 branches missed.">		for (int i = 0; i &lt; shots.size() &amp;&amp; i &lt; m2b.results.size(); i++) {</span>
+<span class="nc" id="L121">			ShotResult r = m2b.results.get(i);</span>
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			boolean valid    = !&quot;INVALID&quot;.equals(r.outcome);</span>
+<span class="nc" id="L124">			boolean repeated = &quot;REPEATED&quot;.equals(r.outcome);</span>
+<span class="nc" id="L125">			boolean sunk     = &quot;SUNK&quot;.equals(r.outcome);</span>
+
+			// We don't have the actual IShip reference for the student's fleet,
+			// so we pass null for ship — the strategy uses outcome strings instead.
+<span class="nc" id="L129">			shotResults.add(new IGame.ShotResult(valid, repeated, null, sunk));</span>
+		}
+
+		// Record the move in the game's alien moves list so strategy can inspect it
+<span class="nc" id="L133">		Move move = new Move(game.getAlienMoves().size() + 1, shots, shotResults);</span>
+<span class="nc" id="L134">		game.getAlienMoves().add(move);</span>
+<span class="nc" id="L135">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

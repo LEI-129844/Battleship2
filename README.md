@@ -58,7 +58,7 @@ Hits are calculated based on the intersection of the shot vector and the ship's 
 ### Step-by-Step
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/britoeabreu/Battleship2.git](https://github.com/britoeabreu/Battleship2.git)
+   git clone https://github.com/britoeabreu/Battleship2.git
    ```
 2. **Navigate to directory:**
    ```bash
@@ -77,6 +77,7 @@ You can access the generated Javadoc here:
 
 👉 [Battleship2 API Documentation](https://britoeabreu.github.io/Battleship2/)
 
+## 🏗️ Code Architecture
 
 ### Core Logic
 ```java
@@ -95,7 +96,6 @@ public class Ship {
 ### Design Patterns Used:
 - **Strategy Pattern:** For different AI difficulty levels.
 - **Observer Pattern:** To update the UI when a ship is hit.
-</details>
 
 ### Logic Flow
 ```mermaid
@@ -152,3 +152,15 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 **Video**
 https://youtu.be/ypZ0PvQxt5A
+
+## Testes e integração contínua
+
+Para executar os testes unitários localmente:
+
+```bash
+mvn test
+```
+
+O GitHub Actions executa os testes automaticamente em cada `push` e `pull_request`,
+usando Java 21. Os resultados podem ser consultados no separador **Actions** do
+repositório GitHub.

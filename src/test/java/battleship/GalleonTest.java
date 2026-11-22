@@ -19,6 +19,7 @@ import java.util.List;
  * - getLeftMostPos: 2
  * - getRightMostPos: 2
  */
+@DisplayName("Testes da classe Galleon")
 public class GalleonTest {
 
 	private Galleon galleon;

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MoveDatabase.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BattleshipGame</a> &gt; <a href="index.source.html" class="el_package">battleship</a> &gt; <span class="el_source">MoveDatabase.java</span></div><h1>MoveDatabase.java</h1><pre class="source lang-java linenums">package battleship;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/** Guarda o histórico das partidas e dos tiros numa base de dados SQLite local. */
+public final class MoveDatabase {
+
+    private static final String DEFAULT_DATABASE_FILE = &quot;battleship.db&quot;;
+
+    private final String jdbcUrl;
+
+    /** Cria ou abre a base de dados local do jogo. */
+    public MoveDatabase() {
+<span class="nc" id="L26">        this(Path.of(DEFAULT_DATABASE_FILE));</span>
+<span class="nc" id="L27">    }</span>
+
+    /** Cria ou abre uma base de dados no caminho indicado. */
+<span class="fc" id="L30">    public MoveDatabase(Path databaseFile) {</span>
+<span class="fc" id="L31">        Objects.requireNonNull(databaseFile, &quot;O caminho da base de dados não pode ser nulo&quot;);</span>
+<span class="fc" id="L32">        Path absolutePath = databaseFile.toAbsolutePath().normalize();</span>
+<span class="fc" id="L33">        Path parent = absolutePath.getParent();</span>
+
+        try {
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">            if (parent != null) {</span>
+<span class="fc" id="L37">                Files.createDirectories(parent);</span>
+            }
+<span class="nc" id="L39">        } catch (IOException exception) {</span>
+<span class="nc" id="L40">            throw new IllegalStateException(&quot;Não foi possível criar a pasta da base de dados&quot;, exception);</span>
+<span class="fc" id="L41">        }</span>
+
+<span class="fc" id="L43">        this.jdbcUrl = &quot;jdbc:sqlite:&quot; + absolutePath.toString().replace('\\', '/');</span>
+<span class="fc" id="L44">        createTables();</span>
+<span class="fc" id="L45">    }</span>
+
+    /** Cria um registo para uma nova partida e devolve o seu identificador. */
+    public long createGame() {
+<span class="fc" id="L49">        try (Connection connection = openConnection();</span>
+<span class="fc" id="L50">             Statement statement = connection.createStatement()) {</span>
+<span class="fc" id="L51">            statement.executeUpdate(&quot;INSERT INTO games DEFAULT VALUES&quot;);</span>
+<span class="fc" id="L52">            try (ResultSet resultSet = statement.executeQuery(&quot;SELECT last_insert_rowid()&quot;)) {</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">                if (resultSet.next()) {</span>
+<span class="fc" id="L54">                    return resultSet.getLong(1);</span>
+                }
+<span class="nc" id="L56">                throw new IllegalStateException(&quot;A base de dados não devolveu o identificador da partida&quot;);</span>
+            }
+<span class="nc" id="L58">        } catch (SQLException exception) {</span>
+<span class="nc" id="L59">            throw new IllegalStateException(&quot;Não foi possível registar a partida na base de dados&quot;, exception);</span>
+        }
+    }
+
+    /** Guarda os tiros e resultados de uma jogada numa única transação. */
+    public void saveMove(long gameId, IMove move) {
+<span class="fc" id="L65">        Objects.requireNonNull(move, &quot;A jogada não pode ser nula&quot;);</span>
+<span class="fc" id="L66">        List&lt;IPosition&gt; shots = move.getShots();</span>
+<span class="fc" id="L67">        List&lt;IGame.ShotResult&gt; results = move.getShotResults();</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (shots.size() != results.size()) {</span>
+<span class="fc" id="L69">            throw new IllegalArgumentException(&quot;Cada tiro deve ter exatamente um resultado&quot;);</span>
+        }
+
+<span class="fc" id="L72">        String sql = &quot;INSERT INTO shots &quot;</span>
+                + &quot;(game_id, move_number, shot_number, coordinate, result, ship_type) &quot;
+                + &quot;VALUES (?, ?, ?, ?, ?, ?)&quot;;
+
+<span class="fc" id="L76">        try (Connection connection = openConnection()) {</span>
+<span class="fc" id="L77">            connection.setAutoCommit(false);</span>
+<span class="fc" id="L78">            try (PreparedStatement statement = connection.prepareStatement(sql)) {</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">                for (int index = 0; index &lt; shots.size(); index++) {</span>
+<span class="fc" id="L80">                    IPosition position = shots.get(index);</span>
+<span class="fc" id="L81">                    IGame.ShotResult shotResult = results.get(index);</span>
+
+<span class="fc" id="L83">                    statement.setLong(1, gameId);</span>
+<span class="fc" id="L84">                    statement.setInt(2, move.getNumber());</span>
+<span class="fc" id="L85">                    statement.setInt(3, index + 1);</span>
+<span class="fc" id="L86">                    statement.setString(4, position.getClassicRow() + &quot;&quot; + position.getClassicColumn());</span>
+<span class="fc" id="L87">                    statement.setString(5, describeResult(shotResult));</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">                    if (shotResult.ship() == null) {</span>
+<span class="fc" id="L89">                        statement.setNull(6, Types.VARCHAR);</span>
+                    } else {
+<span class="fc" id="L91">                        statement.setString(6, shotResult.ship().getCategory());</span>
+                    }
+<span class="fc" id="L93">                    statement.addBatch();</span>
+                }
+<span class="fc" id="L95">                statement.executeBatch();</span>
+<span class="fc" id="L96">                connection.commit();</span>
+<span class="nc" id="L97">            } catch (SQLException exception) {</span>
+<span class="nc" id="L98">                connection.rollback();</span>
+<span class="nc" id="L99">                throw exception;</span>
+<span class="fc" id="L100">            }</span>
+<span class="nc" id="L101">        } catch (SQLException exception) {</span>
+<span class="nc" id="L102">            throw new IllegalStateException(&quot;Não foi possível guardar a jogada na base de dados&quot;, exception);</span>
+<span class="fc" id="L103">        }</span>
+<span class="fc" id="L104">    }</span>
+
+    /** Devolve os tiros de uma partida pela ordem das jogadas e dos tiros. */
+    public List&lt;StoredShot&gt; findShotsForGame(long gameId) {
+<span class="fc" id="L108">        String sql = &quot;SELECT game_id, move_number, shot_number, coordinate, result, ship_type &quot;</span>
+                + &quot;FROM shots WHERE game_id = ? ORDER BY move_number, shot_number&quot;;
+<span class="fc" id="L110">        List&lt;StoredShot&gt; shots = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L112">        try (Connection connection = openConnection();</span>
+<span class="fc" id="L113">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L114">            statement.setLong(1, gameId);</span>
+<span class="fc" id="L115">            try (ResultSet resultSet = statement.executeQuery()) {</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                while (resultSet.next()) {</span>
+<span class="fc" id="L117">                    shots.add(new StoredShot(</span>
+<span class="fc" id="L118">                            resultSet.getLong(&quot;game_id&quot;),</span>
+<span class="fc" id="L119">                            resultSet.getInt(&quot;move_number&quot;),</span>
+<span class="fc" id="L120">                            resultSet.getInt(&quot;shot_number&quot;),</span>
+<span class="fc" id="L121">                            resultSet.getString(&quot;coordinate&quot;),</span>
+<span class="fc" id="L122">                            resultSet.getString(&quot;result&quot;),</span>
+<span class="fc" id="L123">                            resultSet.getString(&quot;ship_type&quot;)));</span>
+                }
+            }
+<span class="fc" id="L126">            return shots;</span>
+<span class="nc" id="L127">        } catch (SQLException exception) {</span>
+<span class="nc" id="L128">            throw new IllegalStateException(&quot;Não foi possível ler o histórico da base de dados&quot;, exception);</span>
+        }
+    }
+
+    private void createTables() {
+<span class="fc" id="L133">        String createGames = &quot;CREATE TABLE IF NOT EXISTS games (&quot;</span>
+                + &quot;game_id INTEGER PRIMARY KEY AUTOINCREMENT, &quot;
+                + &quot;started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)&quot;;
+<span class="fc" id="L136">        String createShots = &quot;CREATE TABLE IF NOT EXISTS shots (&quot;</span>
+                + &quot;game_id INTEGER NOT NULL, &quot;
+                + &quot;move_number INTEGER NOT NULL, &quot;
+                + &quot;shot_number INTEGER NOT NULL, &quot;
+                + &quot;coordinate TEXT NOT NULL, &quot;
+                + &quot;result TEXT NOT NULL, &quot;
+                + &quot;ship_type TEXT, &quot;
+                + &quot;recorded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, &quot;
+                + &quot;PRIMARY KEY (game_id, move_number, shot_number), &quot;
+                + &quot;FOREIGN KEY (game_id) REFERENCES games(game_id) ON DELETE CASCADE)&quot;;
+
+<span class="fc" id="L147">        try (Connection connection = openConnection();</span>
+<span class="fc" id="L148">             Statement statement = connection.createStatement()) {</span>
+<span class="fc" id="L149">            statement.executeUpdate(createGames);</span>
+<span class="fc" id="L150">            statement.executeUpdate(createShots);</span>
+<span class="nc" id="L151">        } catch (SQLException exception) {</span>
+<span class="nc" id="L152">            throw new IllegalStateException(&quot;Não foi possível preparar as tabelas SQLite&quot;, exception);</span>
+<span class="fc" id="L153">        }</span>
+<span class="fc" id="L154">    }</span>
+
+    private Connection openConnection() throws SQLException {
+<span class="fc" id="L157">        Connection connection = DriverManager.getConnection(jdbcUrl);</span>
+<span class="fc" id="L158">        try (Statement statement = connection.createStatement()) {</span>
+<span class="fc" id="L159">            statement.execute(&quot;PRAGMA foreign_keys = ON&quot;);</span>
+<span class="fc" id="L160">            return connection;</span>
+<span class="nc" id="L161">        } catch (SQLException exception) {</span>
+<span class="nc" id="L162">            connection.close();</span>
+<span class="nc" id="L163">            throw exception;</span>
+        }
+    }
+
+    private static String describeResult(IGame.ShotResult result) {
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (!result.valid()) {</span>
+<span class="fc" id="L169">            return &quot;FORA_DO_TABULEIRO&quot;;</span>
+        }
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        if (result.repeated()) {</span>
+<span class="fc" id="L172">            return &quot;REPETIDO&quot;;</span>
+        }
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (result.ship() == null) {</span>
+<span class="fc" id="L175">            return &quot;AGUA&quot;;</span>
+        }
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        if (result.sunk()) {</span>
+<span class="fc" id="L178">            return &quot;AFUNDADO&quot;;</span>
+        }
+<span class="fc" id="L180">        return &quot;ATINGIDO&quot;;</span>
+    }
+
+    /** Representa um tiro persistido na base de dados. */
+<span class="fc" id="L184">    public record StoredShot(</span>
+            long gameId,
+            int moveNumber,
+            int shotNumber,
+            String coordinate,
+            String result,
+            String shipType) {
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

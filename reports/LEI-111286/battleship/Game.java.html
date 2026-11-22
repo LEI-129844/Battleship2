@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Game.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BattleshipGame</a> &gt; <a href="index.source.html" class="el_package">battleship</a> &gt; <span class="el_source">Game.java</span></div><h1>Game.java</h1><pre class="source lang-java linenums">package battleship;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import org.apache.commons.lang3.time.StopWatch;
+
+import java.util.*;
+
+<span class="fc" id="L10">public class Game implements IGame</span>
+{
+    /**
+     * Prints the game board by representing the positions of ships, adjacent tiles,
+     * shots, and other game elements onto the console. The method also optionally
+     * displays shot positions and a legend explaining the symbols used on the board.
+     *
+     * @param fleet       the fleet of ships to be displayed on the board. Ships are marked
+     *                    and their positions are shown according to their placement.
+     * @param moves       the list of moves containing shots. If shot positions are shown,
+     *                    they will be rendered based on their outcome (hit, miss, etc.).
+     * @param show_shots  if true, displays the shots taken during the game and marks
+     *                    their result (hit or miss) on the board.
+     * @param showLegend  if true, displays an explanatory legend of the symbols used
+     *                    to represent various elements such as ships, misses, hits, etc.
+     */
+    public static void printBoard(IFleet fleet, List&lt;IMove&gt; moves, boolean show_shots, boolean showLegend) {
+
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">        assert fleet != null;</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">        assert moves != null;</span>
+
+<span class="fc" id="L31">        char[][] map = new char[BOARD_SIZE][BOARD_SIZE];</span>
+
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        for (int r = 0; r &lt; BOARD_SIZE; r++)</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            for (int c = 0; c &lt; BOARD_SIZE; c++)</span>
+<span class="fc" id="L35">                map[r][c] = EMPTY_MARKER;</span>
+
+<span class="fc" id="L37">        printShips(fleet, map);</span>
+
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (show_shots)</span>
+<span class="fc" id="L40">            printBoardShots(moves, map);</span>
+
+<span class="fc" id="L42">        printBoardFrame(map);</span>
+
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (showLegend) {</span>
+<span class="fc" id="L45">            System.out.println(&quot;          LEGENDA&quot;);</span>
+<span class="fc" id="L46">            System.out.println(&quot;'&quot; + SHIP_MARKER + &quot;'-&gt;navio, '&quot; + SHIP_ADJACENT_MARKER + &quot;'-&gt;adjacente a navio, '&quot; + EMPTY_MARKER + &quot;'-&gt;água&quot;);</span>
+<span class="fc" id="L47">            System.out.println(&quot;'&quot; + SHOT_SHIP_MARKER + &quot;'-&gt;Tiro certeiro, '&quot; + SHOT_WATER_MARKER + &quot;'-&gt;Tiro na água&quot;);</span>
+        }
+<span class="fc" id="L49">        System.out.println();</span>
+<span class="fc" id="L50">    }</span>
+
+    private static void printShips(IFleet fleet, char[][] map) {
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (IShip ship : fleet.getShips()) {</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            for (IPosition ship_pos : ship.getPositions())</span>
+<span class="fc" id="L55">                map[ship_pos.getRow()][ship_pos.getColumn()] = SHIP_MARKER;</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">            if (!ship.stillFloating())</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                for (IPosition adjacent_pos : ship.getAdjacentPositions())</span>
+<span class="fc" id="L58">                    map[adjacent_pos.getRow()][adjacent_pos.getColumn()] = SHIP_ADJACENT_MARKER;</span>
+<span class="fc" id="L59">        }</span>
+<span class="fc" id="L60">    }</span>
+
+    private static void printBoardShots(List&lt;IMove&gt; moves, char[][] map) {
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        for (IMove move : moves)</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            for (IPosition shot : move.getShots()) {</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">                if (shot.isInside()){</span>
+<span class="fc" id="L66">                    int row = shot.getRow();</span>
+<span class="fc" id="L67">                    int col = shot.getColumn();</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">                    if (map[row][col] == SHIP_MARKER)</span>
+<span class="fc" id="L69">                        map[row][col] = SHOT_SHIP_MARKER;</span>
+<span class="fc bfc" id="L70" title="All 4 branches covered.">                    if (map[row][col] == EMPTY_MARKER || map[row][col] == SHIP_ADJACENT_MARKER)</span>
+<span class="fc" id="L71">                        map[row][col] = SHOT_WATER_MARKER;</span>
+                }
+<span class="fc" id="L73">            }</span>
+<span class="fc" id="L74">    }</span>
+
+    private static void printBoardFrame(char[][] map) {
+<span class="fc" id="L77">        System.out.println();</span>
+<span class="fc" id="L78">        System.out.print(&quot;    &quot;);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for (int col = 0; col &lt; BOARD_SIZE; col++) {</span>
+<span class="fc" id="L80">            System.out.print(&quot; &quot; + (col + 1));</span>
+        }
+<span class="fc" id="L82">        System.out.println();</span>
+
+<span class="fc" id="L84">        System.out.print(&quot;   +-&quot;);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for (int col = 0; col &lt; BOARD_SIZE; col++) {</span>
+<span class="fc" id="L86">            System.out.print(&quot;--&quot;);</span>
+        }
+<span class="fc" id="L88">        System.out.println(&quot;+&quot;);</span>
+
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        for (int row = 0; row &lt; BOARD_SIZE; row++) {</span>
+<span class="fc" id="L91">            Position pos = new Position(row, 0);</span>
+<span class="fc" id="L92">            char rowLabel = pos.getClassicRow();</span>
+<span class="fc" id="L93">            System.out.print(&quot; &quot; + rowLabel + &quot; |&quot;);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            for (int col = 0; col &lt; BOARD_SIZE; col++)</span>
+<span class="fc" id="L95">                System.out.print(&quot; &quot; + map[row][col]);</span>
+<span class="fc" id="L96">            System.out.println(&quot; |&quot;);</span>
+        }
+
+<span class="fc" id="L99">        System.out.print(&quot;   +&quot;);</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        for (int col = 0; col &lt; BOARD_SIZE; col++)</span>
+<span class="fc" id="L101">            System.out.print(&quot;--&quot;);</span>
+<span class="fc" id="L102">        System.out.println(&quot;-+&quot;);</span>
+<span class="fc" id="L103">    }</span>
+
+    /**
+     * Serializes a list of shot positions into a JSON string. Each shot is represented
+     * with its classic row and column values. The method uses the Jackson library for
+     * JSON serialization.
+     *
+     * @param shots a list of shot positions to be serialized. Each position is represented
+     *              by an implementation of the {@code IPosition} interface. The list must
+     *              not be null.
+     * @return a formatted JSON string containing the shot positions. Each shot includes
+     *         its classic row and column.
+     * @throws RuntimeException if an error occurs during JSON serialization.
+     */
+    public static String jsonShots(List&lt;IPosition&gt; shots) {
+
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        assert shots != null;</span>
+
+        // Serializar os tiros gerados em JSON usando a biblioteca Jackson
+<span class="fc" id="L122">        ObjectMapper objectMapper = new ObjectMapper();</span>
+<span class="fc" id="L123">        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);</span>
+
+        // 1. Create a simplified list containing only the desired data
+<span class="fc" id="L126">        List&lt;Map&lt;String, Object&gt;&gt; simplifiedShots = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        for (IPosition shot : shots) {</span>
+<span class="fc" id="L128">            Map&lt;String, Object&gt; simplePos = new LinkedHashMap&lt;&gt;();</span>
+            // We use getClassicRow() and getClassicColumn() based on your current JSON output
+<span class="fc" id="L130">            simplePos.put(&quot;row&quot;, String.valueOf(shot.getClassicRow()));</span>
+<span class="fc" id="L131">            simplePos.put(&quot;column&quot;, shot.getClassicColumn());</span>
+<span class="fc" id="L132">            simplifiedShots.add(simplePos);</span>
+<span class="fc" id="L133">        }</span>
+
+<span class="fc" id="L135">        String jsonString = null;</span>
+        try {
+            // 2. Serialize the simplified list instead of the raw 'shots' list
+<span class="fc" id="L138">            jsonString = objectMapper.writeValueAsString(simplifiedShots);</span>
+<span class="nc" id="L139">        } catch (JsonProcessingException e) {</span>
+<span class="nc" id="L140">            throw new RuntimeException(&quot;Erro ao serializar o JSON&quot;, e);</span>
+<span class="fc" id="L141">        }</span>
+
+<span class="fc" id="L143">        System.out.println(jsonString);</span>
+<span class="fc" id="L144">        System.out.println();</span>
+
+        // Retornar o JSON
+<span class="fc" id="L147">        return jsonString;</span>
+    }
+
+    //------------------------------------------------------------------
+    public static final int BOARD_SIZE = 10;
+    public static final int NUMBER_SHOTS = 3;
+
+    private static final char EMPTY_MARKER = '.';
+    private static final char SHIP_MARKER = '#';
+    private static final char SHOT_SHIP_MARKER = '*';
+    private static final char SHOT_WATER_MARKER = 'o';
+    private static final char SHIP_ADJACENT_MARKER = '-';
+
+    //------------------------------------------------------------------
+    private final IFleet myFleet;
+    private final List&lt;IMove&gt; alienMoves;
+
+    private final IFleet alienFleet;
+    private final List&lt;IMove&gt; myMoves;
+
+    private Integer countInvalidShots;
+    private Integer countRepeatedShots;
+    private Integer countHits;
+    private Integer countSinks;
+    private int moveNumber;
+
+    //------------------------------------------------------------------
+    public Game(IFleet myFleet)
+<span class="fc" id="L175">    {</span>
+<span class="fc" id="L176">        this.moveNumber = 1;</span>
+
+<span class="fc" id="L178">        this.alienMoves = new ArrayList&lt;IMove&gt;();</span>
+<span class="fc" id="L179">        this.myMoves = new ArrayList&lt;IMove&gt;();</span>
+
+<span class="fc" id="L181">        this.alienFleet = new Fleet();</span>
+<span class="fc" id="L182">        this.myFleet = myFleet;</span>
+
+<span class="fc" id="L184">        this.countInvalidShots = 0;</span>
+<span class="fc" id="L185">        this.countRepeatedShots = 0;</span>
+<span class="fc" id="L186">        this.countHits = 0;</span>
+<span class="fc" id="L187">        this.countSinks = 0;</span>
+<span class="fc" id="L188">    }</span>
+
+    @Override
+    public IFleet getMyFleet()
+    {
+<span class="fc" id="L193">        return myFleet;</span>
+    }
+
+    @Override
+    public IFleet getAlienFleet()
+    {
+<span class="nc" id="L199">        return alienFleet;</span>
+    }
+
+    @Override
+    public List&lt;IMove&gt; getMyMoves()
+    {
+<span class="nc" id="L205">        return myMoves;</span>
+    }
+
+    @Override
+    public List&lt;IMove&gt; getAlienMoves()
+    {
+<span class="fc" id="L211">        return alienMoves;</span>
+    }
+
+    /**
+     * Simulates a random firing action by the enemy, generating a set of unique shot coordinates
+     * and serializing them into a JSON string. The method ensures that the random shots are valid
+     * and do not duplicate existing shots in the game or previous enemy moves. After generating
+     * the shots, it applies the firing logic and serializes the result for further processing.
+     *
+     * @return A JSON string representing the list of randomly generated enemy shots.
+     * @throws RuntimeException if there is an error during the JSON serialization of the shots.
+     */
+    public String randomEnemyFire() {
+
+        // Criar uma instância de Random com uma seed baseada no timestamp atual
+<span class="nc" id="L226">        Random random = new Random(System.currentTimeMillis());</span>
+
+<span class="nc" id="L228">        Set&lt;IPosition&gt; usablePositions = new HashSet&lt;IPosition&gt;();</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        for (int r = 0; r &lt; BOARD_SIZE; r++)</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">            for (int c = 0; c &lt; BOARD_SIZE; c++)</span>
+<span class="nc" id="L231">                usablePositions.add(new Position(r, c));</span>
+
+<span class="nc" id="L233">        this.myFleet.getSunkShips().forEach(ship -&gt; usablePositions.removeAll(ship.getAdjacentPositions()));</span>
+<span class="nc" id="L234">        this.alienMoves.forEach(move -&gt;  usablePositions.removeAll(move.getShots()));</span>
+
+<span class="nc" id="L236">        List&lt;IPosition&gt; candidateShots = new ArrayList&lt;&gt;(usablePositions);</span>
+
+        // Criar lista para armazenar os tiros
+<span class="nc" id="L239">        List&lt;IPosition&gt; shots = new ArrayList&lt;IPosition&gt;();</span>
+
+<span class="nc" id="L241">        System.out.println();</span>
+        // Gerar coordenadas únicas até atingir o número definido por NUMBER_SHOTS
+
+<span class="nc" id="L244">        IPosition newShot = null;</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        if (candidateShots.size() &gt;= Game.NUMBER_SHOTS)</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">            while (shots.size() &lt; Game.NUMBER_SHOTS) {</span>
+<span class="nc" id="L247">                newShot = candidateShots.get(random.nextInt(candidateShots.size()));</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">                if (!shots.contains(newShot))</span>
+<span class="nc" id="L249">                    shots.add(newShot);</span>
+            }
+        else {
+<span class="nc bnc" id="L252" title="All 2 branches missed.">            while (shots.size() &lt; candidateShots.size()) {</span>
+<span class="nc" id="L253">                newShot = candidateShots.get(random.nextInt(candidateShots.size()));</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">                if (!shots.contains(newShot))</span>
+<span class="nc" id="L255">                    shots.add(newShot);</span>
+            }
+<span class="nc bnc" id="L257" title="All 2 branches missed.">            while (shots.size() &lt; Game.NUMBER_SHOTS)</span>
+<span class="nc" id="L258">                shots.add(newShot);</span>
+        }
+
+<span class="nc" id="L261">        System.out.print(&quot;rajada &quot;);</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">        for (IPosition shot : shots)</span>
+<span class="nc" id="L263">            System.out.print(shot + &quot; &quot;);</span>
+<span class="nc" id="L264">        System.out.println();</span>
+
+<span class="nc" id="L266">        this.fireShots(shots);</span>
+
+<span class="nc" id="L268">        return Game.jsonShots(shots);</span>
+    }
+
+    /**
+     * Reads and processes the enemy fire input from the specified scanner.
+     * The method expects input describing positions for enemy shots. It verifies
+     * the format, ensures the correct number of positions are provided, and then fires
+     * on those positions.
+     *
+     * @param in the scanner object to read the enemy fire positions from, input must
+     *           be formatted either as a single token combining the column and row
+     *           (e.g., &quot;A3&quot;) or as separate tokens (e.g., &quot;A&quot; followed by &quot;3&quot;).
+     * @throws IllegalArgumentException if the provided positions are incomplete,
+     *                                  incorrectly formatted, or do not match the
+     *                                  required number of shots (NUMBER_SHOTS).
+     */
+    public String readEnemyFire(Scanner in) {
+
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">        assert in != null;</span>
+
+<span class="fc" id="L288">        String input = in.nextLine().trim();</span>
+
+        // Criar lista para armazenar os tiros
+<span class="fc" id="L291">        List&lt;IPosition&gt; shots = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L293">        Scanner inputScanner = new Scanner(input);</span>
+<span class="pc bpc" id="L294" title="1 of 4 branches missed.">        while (shots.size() &lt; NUMBER_SHOTS &amp;&amp; inputScanner.hasNext()) {</span>
+            // Lê a próxima parte e constrói uma posição
+<span class="fc" id="L296">            String token = inputScanner.next();</span>
+
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">            if (token.matches(&quot;[A-Za-z]&quot;)) {</span>
+                // Caso seja somente uma coluna (&quot;A&quot;, &quot;B&quot;, etc.), esperar o próximo número
+<span class="nc bnc" id="L300" title="All 2 branches missed.">                if (inputScanner.hasNextInt()) {</span>
+<span class="nc" id="L301">                    int row = inputScanner.nextInt();</span>
+<span class="nc" id="L302">                    shots.add(new Position(token.toUpperCase().charAt(0), row));</span>
+<span class="nc" id="L303">                } else {</span>
+<span class="nc" id="L304">                    throw new IllegalArgumentException(&quot;Posição incompleta! A coluna '&quot; + token + &quot;' não é seguida por uma linha.&quot;);</span>
+                }
+            } else {
+                // Caso o token já contenha a coluna e a linha juntas (ex.: &quot;A3&quot;)
+<span class="fc" id="L308">                Scanner singleScanner = new Scanner(token);</span>
+<span class="fc" id="L309">                shots.add(Tasks.readClassicPosition(singleScanner));</span>
+            }
+<span class="fc" id="L311">        }</span>
+
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">        if (shots.size() != NUMBER_SHOTS) {</span>
+<span class="nc" id="L314">            throw new IllegalArgumentException(&quot;Você deve inserir exatamente &quot; + NUMBER_SHOTS + &quot; posições!&quot;);</span>
+        }
+
+<span class="fc" id="L317">        this.fireShots(shots);</span>
+
+<span class="fc" id="L319">        return Game.jsonShots(shots);</span>
+    }
+
+    /**
+     * Fires a set of shots during a player's move. Each shot is resolved and
+     * consolidated into a move, which is processed and added to the list of alien moves.
+     * The method ensures exactly {@code NUMBER_SHOTS} shots are fired, validates
+     * each shot's position, and increments the move counter after completing the operation.
+     *
+     * @param shots a list of positions representing the locations to fire shots at.
+     *              The positions should be unique and valid within the bounds of the game board.
+     *              The size of the list must be equal to {@code NUMBER_SHOTS}.
+     * @throws IllegalArgumentException if the list of shots is null, contains an invalid
+     *                                  number of positions, or includes duplicate positions.
+     */
+    public void fireShots(List&lt;IPosition&gt; shots)
+    {
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">        assert shots != null;</span>
+
+<span class="fc" id="L338">        List&lt;ShotResult&gt; shotResults = new ArrayList&lt;ShotResult&gt;();</span>
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">        if (shots.size() != NUMBER_SHOTS) {</span>
+<span class="nc" id="L340">            throw new IllegalArgumentException(&quot;Must fire exactly &quot; + NUMBER_SHOTS + &quot; shots per move.&quot;);</span>
+        }
+
+<span class="fc" id="L343">        List&lt;IPosition&gt; alreadyShot = new ArrayList&lt;IPosition&gt;();</span>
+<span class="fc bfc" id="L344" title="All 2 branches covered.">        for (IPosition pos : shots) {</span>
+<span class="fc" id="L345">            shotResults.add(fireSingleShot(pos, alreadyShot.contains(pos)));</span>
+<span class="fc" id="L346">            alreadyShot.add(pos);</span>
+<span class="fc" id="L347">        }</span>
+
+<span class="fc" id="L349">        Move move = new Move(moveNumber, shots, shotResults);</span>
+
+//     System.out.println(move);
+
+<span class="fc" id="L353">        move.processEnemyFire(true);</span>
+
+<span class="fc" id="L355">        alienMoves.add(move);</span>
+
+<span class="fc" id="L357">        moveNumber++;</span>
+<span class="fc" id="L358">    }</span>
+
+    /**
+     * Fires a single shot at the specified position, handling scenarios such as invalid positions,
+     * repeated shots, hits, misses, and sinking a ship. The method updates the necessary counters
+     * for invalid shots, repeated shots, hits, and sunk ships.
+     *
+     * @param pos the position to fire the shot at; must be valid and within the game board boundaries.
+     * @param isRepeated true if the shot is marked as a repeat attempt, false otherwise.
+     * @return a ShotResult object containing the result of the shot, including whether the shot was
+     *         valid, repeated, a hit, and whether a ship was sunk.
+     */
+    public ShotResult fireSingleShot(IPosition pos, boolean isRepeated) {
+
+<span class="pc bpc" id="L372" title="1 of 2 branches missed.">        assert pos != null;</span>
+
+<span class="fc bfc" id="L374" title="All 2 branches covered.">        if (!pos.isInside()) {</span>
+<span class="fc" id="L375">            countInvalidShots++;</span>
+<span class="fc" id="L376">            return new ShotResult(false, false, null, false);</span>
+        }
+
+<span class="pc bpc" id="L379" title="1 of 4 branches missed.">        if (isRepeated || repeatedShot(pos)) {</span>
+<span class="fc" id="L380">            countRepeatedShots++;</span>
+<span class="fc" id="L381">            return new ShotResult(true, true, null, false);</span>
+        }
+
+<span class="fc" id="L384">        IShip ship = myFleet.shipAt(pos);</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">        if (ship == null)</span>
+<span class="fc" id="L386">            return new ShotResult(true, false, null, false);</span>
+        else
+        {
+<span class="fc" id="L389">            ship.shoot(pos);</span>
+<span class="fc" id="L390">            countHits++;</span>
+<span class="pc bpc" id="L391" title="1 of 2 branches missed.">            if (!ship.stillFloating()) {</span>
+<span class="fc" id="L392">                countSinks++;</span>
+            }
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">            return new ShotResult(true, false, ship, !ship.stillFloating());</span>
+        }
+    }
+
+    @Override
+    public int getRepeatedShots()
+    {
+<span class="fc" id="L401">        return this.countRepeatedShots;</span>
+    }
+
+    @Override
+    public int getInvalidShots()
+    {
+<span class="fc" id="L407">        return this.countInvalidShots;</span>
+    }
+
+    @Override
+    public int getHits()
+    {
+<span class="fc" id="L413">        return this.countHits;</span>
+    }
+
+    @Override
+    public int getSunkShips()
+    {
+<span class="fc" id="L419">        return this.countSinks;</span>
+    }
+
+    @Override
+    public int getRemainingShips()
+    {
+<span class="fc" id="L425">        List&lt;IShip&gt; floatingShips = myFleet.getFloatingShips();</span>
+<span class="fc" id="L426">        return floatingShips.size();</span>
+    }
+
+    public boolean repeatedShot(IPosition pos)
+    {
+<span class="pc bpc" id="L431" title="1 of 2 branches missed.">        assert pos != null;</span>
+
+<span class="fc bfc" id="L433" title="All 2 branches covered.">        for (IMove move : alienMoves)</span>
+<span class="pc bpc" id="L434" title="1 of 2 branches missed.">            if (move.getShots().contains(pos))</span>
+<span class="fc" id="L435">                return true;</span>
+<span class="fc" id="L436">        return false;</span>
+    }
+
+    public void printMyBoard(boolean show_shots, boolean show_legend)
+    {
+<span class="fc" id="L441">        Game.printBoard(this.myFleet, this.alienMoves, show_shots, show_legend);</span>
+<span class="fc" id="L442">    }</span>
+
+    public void printAlienBoard(boolean show_shots, boolean show_legend)
+    {
+<span class="nc" id="L446">        Game.printBoard(this.alienFleet, this.myMoves, show_shots, show_legend);</span>
+<span class="nc" id="L447">    }</span>
+
+    public void over() {
+<span class="nc" id="L450">        System.out.println();</span>
+<span class="nc" id="L451">        System.out.println(&quot;+--------------------------------------------------------------+&quot;);</span>
+<span class="nc" id="L452">        System.out.println(&quot;| Maldito sejas, Java Sparrow, eu voltarei, glub glub glub ... |&quot;);</span>
+<span class="nc" id="L453">        System.out.println(&quot;+--------------------------------------------------------------+&quot;);</span>
+
+        // Gravação automática das estatísticas no Scoreboard JSON
+<span class="nc" id="L456">        int totalTiros = this.alienMoves.size() * NUMBER_SHOTS;</span>
+<span class="nc" id="L457">        int naviosAfundados = this.getSunkShips();</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">        boolean vitoria = (getRemainingShips() == 0);</span>
+
+<span class="nc" id="L460">        ScoreboardManager.registarPartida(totalTiros, naviosAfundados, vitoria);</span>
+<span class="nc" id="L461">        ScoreboardManager.imprimirScoreboard();</span>
+<span class="nc" id="L462">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

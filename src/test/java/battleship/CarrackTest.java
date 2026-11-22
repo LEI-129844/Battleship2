@@ -22,6 +22,7 @@ import java.util.List;
  * - getLeftMostPos: 2
  * - getRightMostPos: 2
  */
+@DisplayName("Testes da classe Carrack")
 public class CarrackTest {
 
     private Carrack carrack;

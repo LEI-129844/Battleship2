@@ -1,6 +1,7 @@
 package battleship;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
@@ -8,6 +9,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MoveDatabaseTest {
@@ -16,6 +18,7 @@ class MoveDatabaseTest {
     Path tempDirectory;
 
     @Test
+    @DisplayName("Guarda coordenadas e resultados e preserva-os ao reabrir a base de dados")
     void storesShotCoordinatesAndResultsAcrossDatabaseReopen() {
         Path databaseFile = tempDirectory.resolve("game-history.db");
         MoveDatabase database = new MoveDatabase(databaseFile);
@@ -52,5 +55,46 @@ class MoveDatabaseTest {
         assertEquals("FORA_DO_TABULEIRO", savedShots.get(3).result());
         assertEquals("ATINGIDO", savedShots.get(4).result());
         assertEquals("AGUA", savedShots.get(5).result());
+    }
+
+    @Test
+    @DisplayName("Rejeita um caminho nulo")
+    void rejectsNullDatabasePath() {
+        assertThrows(NullPointerException.class, () -> new MoveDatabase((Path) null));
+    }
+
+    @Test
+    @DisplayName("Rejeita uma jogada cuja quantidade de tiros difere da quantidade de resultados")
+    void rejectsMoveWithDifferentShotAndResultCounts() {
+        MoveDatabase database = new MoveDatabase(tempDirectory.resolve("invalid.db"));
+        long gameId = database.createGame();
+        Move move = new Move(
+                1,
+                List.of(new Position(0, 0)),
+                List.of());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> database.saveMove(gameId, move),
+                "Uma jogada deve ter exatamente um resultado por tiro");
+    }
+
+    @Test
+    @DisplayName("Devolve uma lista vazia para uma partida sem jogadas")
+    void returnsEmptyListForGameWithoutShots() {
+        MoveDatabase database = new MoveDatabase(tempDirectory.resolve("empty.db"));
+        long gameId = database.createGame();
+
+        assertTrue(database.findShotsForGame(gameId).isEmpty());
+        assertTrue(database.findShotsForGame(gameId + 100).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Rejeita uma jogada nula")
+    void rejectsNullMove() {
+        MoveDatabase database = new MoveDatabase(tempDirectory.resolve("null-move.db"));
+        long gameId = database.createGame();
+
+        assertThrows(NullPointerException.class,
+                () -> database.saveMove(gameId, null));
     }
 }
