@@ -9,6 +9,9 @@ import java.util.*;
 
 public class Game implements IGame
 {
+
+    private static final String BORDER = "+--------------------------------------------------------------+";
+
     /**
      * Prints the game board by representing the positions of ships, adjacent tiles,
      * shots, and other game elements onto the console. The method also optionally
@@ -448,9 +451,9 @@ public class Game implements IGame
 
     public void over() {
         System.out.println();
-        System.out.println("+--------------------------------------------------------------+");
+        System.out.println(BORDER);
         System.out.println("| Maldito sejas, Java Sparrow, eu voltarei, glub glub glub ... |");
-        System.out.println("+--------------------------------------------------------------+");
+        System.out.println(BORDER);
 
         // Gravação automática das estatísticas no Scoreboard JSON
         int totalTiros = this.alienMoves.size() * NUMBER_SHOTS;
