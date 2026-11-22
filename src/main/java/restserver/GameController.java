@@ -19,6 +19,8 @@ import java.util.List;
 @RestController
 public class GameController {
 
+	private static final int MAX_COLUMN = 10;
+	private static final int MIN_COLUMN = 1;
 	private final GameRegistry registry;
 	private final CallbackClient callbackClient;
 	private final AiShotStrategy aiStrategy;
@@ -144,7 +146,7 @@ public class GameController {
 	}
 
 	private static boolean isInvalidPosition(ShotPosition sp) {
-		return sp.row == null || sp.row.isBlank() || sp.column < 1 || sp.column > 10;
+		return sp.row == null || sp.row.isBlank() || sp.column < MIN_COLUMN || sp.column > MAX_COLUMN;
 	}
 
 	// =========================================================================
