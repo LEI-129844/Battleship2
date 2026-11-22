@@ -100,8 +100,8 @@ public class GameControllerTest {
 
     private static RegistrationRequest registration(String name, String url) {
         RegistrationRequest request = new RegistrationRequest();
-        request.playerName = name;
-        request.callbackUrl = url;
+        request.setPlayerName(name);
+        request.setCallbackUrl(url);
         return request;
     }
 

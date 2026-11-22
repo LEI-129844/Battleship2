@@ -43,11 +43,11 @@ class DtosTest {
     @DisplayName("Atribui os campos de um pedido de registo")
     void registrationRequestFields() {
         Dtos.RegistrationRequest request = new Dtos.RegistrationRequest();
-        request.playerName = "Alice";
-        request.callbackUrl = "http://localhost:9090";
+        request.setPlayerName("Alice");
+        request.setCallbackUrl("http://localhost:9090");
 
-        assertEquals("Alice", request.playerName);
-        assertEquals("http://localhost:9090", request.callbackUrl);
+        assertEquals("Alice", request.getPlayerName());
+        assertEquals("http://localhost:9090", request.getCallbackUrl());
     }
 
     @Test

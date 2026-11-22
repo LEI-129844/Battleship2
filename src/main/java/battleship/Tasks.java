@@ -258,18 +258,33 @@ public class Tasks {
 		// Normalizar o input para tratar letras maiúsculas e minúsculas
 		input = input.toUpperCase();
 
-		// Verificar os dois formatos possíveis: compactos e com espaço
-		if (input.matches("[A-Z]\\d+")) {
-			char column = input.charAt(0); // Extrair a coluna
-			int row = Integer.parseInt(input.substring(1)); // Extrair a linha
-			return new Position(column, row);
-		} else if (part2 != null && part1.matches("[A-Z]") && part2.matches("\\d+")) {
-			char column = part1.charAt(0); // Extrair a coluna
-			int row = Integer.parseInt(part2); // Extrair a linha
-			return new Position(column, row);
-		} else {
-			throw new IllegalArgumentException("Formato inválido. Use 'A3', 'A 3' ou similar.");
+		if (isCompactPosition(input)) {
+			return parseCompactPosition(input);
 		}
+		if (isSeparatedPosition(part1, part2)) {
+			return parseSeparatedPosition(part1, part2);
+		}
+		throw new IllegalArgumentException("Formato inválido. Use 'A3', 'A 3' ou similar.");
+	}
+
+	private static boolean isCompactPosition(String input) {
+		return input.matches("[A-Z]\\d+");
+	}
+
+	private static IPosition parseCompactPosition(String input) {
+		char column = input.charAt(0);
+		int row = Integer.parseInt(input.substring(1));
+		return new Position(column, row);
+	}
+
+	private static boolean isSeparatedPosition(String part1, String part2) {
+		return part2 != null && part1.matches("[A-Z]") && part2.matches("\\d+");
+	}
+
+	private static IPosition parseSeparatedPosition(String part1, String part2) {
+		char column = part1.charAt(0);
+		int row = Integer.parseInt(part2);
+		return new Position(column, row);
 	}
 
 }
