@@ -108,7 +108,7 @@ public class GameController {
 		// ── 3. Convert DTO positions → IPosition list ────────────────────────
 		List<IPosition> positions = new ArrayList<>();
 		for (ShotPosition sp : request.shots) {
-			if (sp.row == null || sp.row.isBlank() || sp.column < 1 || sp.column > 10) {
+			if (isInvalidPosition(sp)) {
 				return error(HttpStatus.BAD_REQUEST,
 						"Invalid position: row='" + sp.row + "' column=" + sp.column);
 			}
@@ -141,6 +141,10 @@ public class GameController {
 
 		// ── 7. Return m1b to student ─────────────────────────────────────────
 		return ResponseEntity.ok(m1bResponse);
+	}
+
+	private static boolean isInvalidPosition(ShotPosition sp) {
+		return sp.row == null || sp.row.isBlank() || sp.column < 1 || sp.column > 10;
 	}
 
 	// =========================================================================

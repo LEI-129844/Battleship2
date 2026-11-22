@@ -8,3 +8,7 @@
 target/classes/battleship/Fleet.class
 target/classes/battleship/Game.class
 target/classes/battleship/Tasks.class
+target/classes/battleship/Move.class
+target/classes/battleship/Fleet.class
+target/classes/restserver/CallbackClient.class
+target/classes/restserver/GameController.class
